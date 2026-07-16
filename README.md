@@ -23,7 +23,7 @@ Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies
 
 | Layer | What Shield finds |
 | --- | --- |
-| **Code (SAST)** | Insecure patterns across **21 languages** — injection, XSS, weak crypto, unsafe deserialization, and more |
+| **Code (SAST)** | Insecure patterns across **14 languages** — injection, XSS, weak crypto, unsafe deserialization, and more |
 | **Secrets** | **26 credential patterns** — cloud keys, tokens, private keys, database URLs, provider API keys |
 | **Dependencies (SCA)** | Known CVEs via **[OSV.dev](https://osv.dev)** + a **CycloneDX 1.4 SBOM** |
 | **Containers** | Dockerfile misconfigurations and image scanning |
@@ -33,7 +33,7 @@ Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies
 
 ## Supported languages (SAST)
 
-C · C++ · C# · Dart · Go · Java · JavaScript · Kotlin · Lua · Perl · PHP · Python · Ruby · Rust · Scala · Shell · Swift · TypeScript — plus **JSON · YAML · Terraform** for config/IaC.
+C · C++ · C# · Dart · Go · Java · JavaScript · Kotlin · PHP · Python · Ruby · Rust · Swift · TypeScript — plus **YAML · Terraform · Kubernetes · CloudFormation** for config/IaC.
 
 ## Install the CLI
 
@@ -99,7 +99,7 @@ Most scanners drown you in findings. Shield scores every finding **0–100** by 
 
 **Does my code leave my machine?** `shield scan .` runs locally. Results are only uploaded when you pass `--submit` to send them to your dashboard.
 
-**Which languages are supported?** 21 for SAST (see the list above). Secrets, dependency, and container scanning are language-agnostic.
+**Which languages are supported?** 14 for SAST (see the list above). Secrets, dependency, and container scanning are language-agnostic.
 
 **Can I run it in CI?** Yes — see the GitHub Actions example above. Any CI that can run a binary works.
 
