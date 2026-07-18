@@ -13,6 +13,11 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/scan-demo.svg" alt="Example: shield scan finds a shell injection, hardcoded secrets and a weak hash" width="720">
+</p>
+
+
 ---
 
 Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies, secrets, containers, and infrastructure-as-code for security vulnerabilities — then ranks what to fix first by real-world risk, so you spend time on the issues that actually matter.
@@ -34,6 +39,57 @@ Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies
 ## Supported languages (SAST)
 
 C · C++ · C# · Dart · Go · Java · JavaScript · Kotlin · PHP · Python · Ruby · Rust · Swift · TypeScript — plus **YAML · Terraform · Kubernetes · CloudFormation** for config/IaC.
+
+## How Shield compares
+
+_Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible with the stated `make` command. Figures attributed to OWASP are reproduced from OWASP's independently published scorecards. All tools are run at their default, out-of-the-box configuration; results may vary with tool version, configuration, ruleset, and codebase. Ordering in the tables reflects the stated metric value only and is not a general quality ranking._
+
+### OWASP Benchmark v1.2 (third-party test suite)
+
+The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases**. The score is **True Positive Rate minus False Positive Rate** (higher is better). Rows marked _OWASP scorecard_ are reproduced from OWASP's independently published Benchmark v1.2 scorecards (retrieved 2026-07-18). Rows marked our measurement are measured by us with our own harness against the public OWASP Benchmark test suite.
+
+| Tool | Precision | Benchmark Score | Source |
+|------|-----------|-----------------|--------|
+| Shield | 92.8% | +0.450 | our measurement |
+| FindSecBugs | 66.1% | +0.438 | OWASP scorecard |
+| SonarQube (Java) | 81.1% | +0.323 | OWASP scorecard |
+| Semgrep | 65.5% | +0.299 | our measurement |
+| OWASP ZAP | 99.6% | +0.172 | OWASP scorecard |
+
+Rows marked _OWASP scorecard_ reflect the tool version and default configuration recorded in the cited OWASP Benchmark v1.2 scorecard as of the retrieval date above; results may differ with other versions, configurations, or releases. OWASP does not endorse, sponsor, or verify this comparison.
+
+On this suite Shield's precision is 92.8% at a True Positive Rate (recall) of roughly 46% — consistent with our precision-first design (see the note below).
+
+### Dependency (SCA) scanning — worked example on one project
+
+This is an illustrative worked example on a **single real Node.js project at a pinned commit**, not a multi-project benchmark. All rows below are measured by us with our measurement, with every tool at its default, out-of-the-box configuration.
+
+Ground truth is **9 known-vulnerable advisories** for this project, each independently verifiable in public advisory databases (GitHub Advisory / OSV) and confirmed by at least two of OSV, Trivy, Snyk, and npm audit. The advisory IDs are listed alongside the harness so the ground truth can be checked externally rather than defined by our run. Detection counts reflect what each tool surfaced for this project at default configuration; tools may reach different results with lockfile or configuration flags, so these counts are not a general statement about any tool's dependency-scanning capability.
+
+| Tool | Advisories detected (of 9) |
+|------|----------------------------|
+| Shield | 9 |
+| OSV | 9 |
+| npm audit | 3 |
+| Trivy | 2 |
+| Snyk | 2 |
+
+Semgrep is a SAST tool and does not target dependency scanning in the configuration tested, so it is not included in this table.
+
+### Reproduce it yourself
+
+- **OWASP Benchmark:** the suite is public — install the Shield CLI (above) and run it against [OWASP-Benchmark/BenchmarkJava](https://github.com/OWASP-Benchmark/BenchmarkJava), then score with OWASP's own scoring tool. The competitor rows can be checked directly against OWASP's [published Benchmark scorecards](https://owasp.org/www-project-benchmark/).
+- **Dependency example:** the 9 advisories are public GitHub Advisory / OSV entries — verify each in those databases and re-run any listed tool at its default configuration on the same project and commit.
+
+Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single offline scan, with findings ranked 0-100 using severity, exploitability signals (EPSS/KEV where a CVE is known), and reachability.
+
+### A note on precision
+
+Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.8% precision at roughly 46% recall. We think fewer, higher-confidence findings are the right default — and because every benchmark we measure is reproducible, you can measure the trade-off for your own code.
+
+---
+
+_Trademarks and product names — including OWASP, OWASP Benchmark, FindSecBugs, SonarQube, Semgrep, OWASP ZAP, Trivy, Snyk, OSV, and npm — are the property of their respective owners and are used here for identification only. This project is not affiliated with, endorsed by, or sponsored by any of them, including the OWASP Foundation. The OWASP Benchmark test suite is used under its open-source license._
 
 ## Install the CLI
 
