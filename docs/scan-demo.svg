@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="322" viewBox="0 0 760 322" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+  <rect x="1" y="1" width="758" height="320" rx="10" fill="#0d1117" stroke="#30363d"/>
+  <circle cx="24" cy="24" r="6" fill="#ff5f56"/>
+  <circle cx="44" cy="24" r="6" fill="#ffbd2e"/>
+  <circle cx="64" cy="24" r="6" fill="#27c93f"/>
+  <text x="380" y="28" text-anchor="middle" fill="#8b949e" font-size="13">zennoxa shield — scan</text>
+  <line x1="1" y1="46" x2="759" y2="46" stroke="#30363d"/>
+  <text y="84" font-size="15"><tspan x="24" fill="#3fb950">$</tspan><tspan fill="#e6edf3"> shield scan .</tspan></text>
+  <text x="24" y="112" font-size="13" fill="#8b949e">Zennoxa Shield · SAST + Secrets · offline, no account needed</text>
+  <g font-size="14">
+    <text y="150"><tspan x="24" fill="#f85149">&#9679; critical</tspan><tspan x="150" fill="#8b949e">app.py:14</tspan><tspan x="280" fill="#e6edf3">Shell injection via os.system</tspan><tspan x="610" fill="#6e7681">CWE-78</tspan></text>
+    <text y="180"><tspan x="24" fill="#ff9d00">&#9679; high</tspan><tspan x="150" fill="#8b949e">app.py:3</tspan><tspan x="280" fill="#e6edf3">Hardcoded API key</tspan><tspan x="610" fill="#6e7681">CWE-798</tspan></text>
+    <text y="210"><tspan x="24" fill="#ff9d00">&#9679; high</tspan><tspan x="150" fill="#8b949e">app.py:3</tspan><tspan x="280" fill="#e6edf3">Hardcoded password / secret</tspan><tspan x="610" fill="#6e7681">CWE-798</tspan></text>
+    <text y="240"><tspan x="24" fill="#e3b341">&#9679; medium</tspan><tspan x="150" fill="#8b949e">app.py:11</tspan><tspan x="280" fill="#e6edf3">Weak hash (MD5 / SHA1)</tspan><tspan x="610" fill="#6e7681">CWE-327</tspan></text>
+  </g>
+  <line x1="24" y1="262" x2="736" y2="262" stroke="#21262d"/>
+  <text y="292" font-size="14"><tspan x="24" fill="#e6edf3">4 findings</tspan><tspan fill="#8b949e">  &#183;  </tspan><tspan fill="#f85149">1 critical</tspan><tspan fill="#8b949e"> &#183; </tspan><tspan fill="#ff9d00">2 high</tspan><tspan fill="#8b949e"> &#183; </tspan><tspan fill="#e3b341">1 medium</tspan><tspan fill="#8b949e">   &#183;   ranked 0&#8211;100 by real-world risk</tspan></text>
+</svg>
