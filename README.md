@@ -41,6 +41,8 @@ Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies
 C · C++ · C# · Dart · Go · Java · JavaScript · Kotlin · PHP · Python · Ruby · Rust · Swift · TypeScript — plus **YAML · Terraform · Kubernetes · CloudFormation** for config/IaC.
 
 ## How Shield compares
+> 📊 **Full evidence — every target we tested (OWASP Benchmark · Juice Shop · WebGoat · DVNA · Kubernetes Goat · terragoat), per scan layer, with reproduce commands → [docs/EVIDENCE.md](docs/EVIDENCE.md)**
+
 
 _Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible with the stated `make` command. Figures attributed to OWASP are reproduced from OWASP's independently published scorecards. All tools are run at their default, out-of-the-box configuration; results may vary with tool version, configuration, ruleset, and codebase. Ordering in the tables reflects the stated metric value only and is not a general quality ranking._
 
