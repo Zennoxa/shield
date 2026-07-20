@@ -1,0 +1,13 @@
+# .github/workflows/security.yml — scan every push & PR with Zennoxa Shield
+name: Security
+on: [push, pull_request]
+jobs:
+  shield:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Zennoxa/shield@v0.1.0        # pin to a tag (or a commit SHA)
+        with:
+          path: .
+          args: --deps                     # also scan dependencies (SCA)
+          fail-on-findings: false          # set true to block the PR on findings
