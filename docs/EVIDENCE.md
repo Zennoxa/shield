@@ -1,9 +1,9 @@
 # Zennoxa Shield — Tested Against Real Targets
 
 We don't just claim accuracy — here is **exactly what we ran Shield against and what it found.**
-Public datasets, default competitor configs, reproducible commands. Numbers you can check yourself.
+Public datasets, reproducible commands, and the exact targets we ran against. Numbers you can check yourself.
 
-_Last measured 2026-07-18. Competitors run at default configuration. Figures attributed to OWASP are reproduced from OWASP's own published scorecards. Trademarks belong to their owners; this is a factual comparison, not an endorsement._
+_Last measured 2026-07-18. Every figure is a **measured result** on the named public dataset, reproducible with the stated command — not a claim of general superiority. Competitor figures on the OWASP Benchmark are reproduced from **OWASP's own published scorecards**. Results depend on tool versions, rulesets, configuration, and workload and may differ elsewhere. See the Methodology Notice at the end._
 
 ---
 
@@ -11,7 +11,7 @@ _Last measured 2026-07-18. Competitors run at default configuration. Figures att
 
 | Target (public) | What it is | Layers exercised | Headline result |
 |---|---|---|---|
-| **OWASP Benchmark v1.2** | 2,740 labelled Java test cases | SAST | **#1 Benchmark Score (+0.450), 92.8% precision** |
+| **OWASP Benchmark v1.2** | 2,740 labelled Java test cases | SAST | **Benchmark Score +0.450, 92.8% precision** |
 | **OWASP Juice Shop** | Deliberately-insecure JS/Node app | SAST · Secrets · SCA | issues detected across all three layers; audit precision below |
 | **DVNA** | Damn Vulnerable NodeJS App | SAST · SCA · Secrets | ~88% precision (verified audit) |
 | **WebGoat** | OWASP Java training app | SAST · Secrets | ~86% precision (verified audit) |
@@ -32,13 +32,12 @@ Scans `.py .js .ts .java .go .php .rb .cs .cpp .c .kt .rs .swift .dart` (+ IaC/c
 
 | Tool | Precision | Benchmark Score | Source |
 |---|---:|---:|---|
-| 🏆 **Shield** | **92.8%** | **+0.450** | our measurement |
-| FindSecBugs | 66.1% | +0.438 | OWASP scorecard |
-| SonarQube (Java) | 81.1% | +0.323 | OWASP scorecard |
-| Semgrep | 65.5% | +0.299 | our measurement |
-| OWASP ZAP | 99.6% | +0.172 | OWASP scorecard |
+| **Shield** | **92.8%** | **+0.450** | our measurement · reproduce: `make bench-owasp` |
+| FindSecBugs | 66.1% | +0.438 | OWASP published scorecard |
+| SonarQube (Java) | 81.1% | +0.323 | OWASP published scorecard |
+| OWASP ZAP | 99.6% | +0.172 | OWASP published scorecard |
 
-→ **Highest Benchmark Score of the tools measured, at 92.8% precision.** Reproduce: `make bench-owasp`.
+Shield's measured Benchmark Score is **+0.450 at 92.8% precision**, reproducible with `make bench-owasp`. Competitor rows are reproduced from OWASP's own published scorecards for the same suite.
 
 ### 🔑 Secrets — 26 credential patterns
 Scans **every file** for cloud keys, tokens, private keys, database URLs, provider API keys.
@@ -47,17 +46,7 @@ Verified on Juice Shop / WebGoat / DVNA / Kubernetes Goat — SCA + secret findi
 ### 📦 SCA (dependencies) — via OSV.dev + CycloneDX SBOM
 Scans `package.json`, `package-lock.json`, `pom.xml`, `requirements.txt`, `go.mod`, `Gemfile.lock`, `composer.lock`, …
 
-**Head-to-head on a real Node project** (`zennoxa-web`, pinned commit, all tools at default config). Ground truth = **9** known-vulnerable advisories (undici, dompurify, form-data), each verifiable in the public GitHub Advisory / OSV databases:
-
-| Tool | Advisories detected (of 9) |
-|---|---:|
-| **Shield** | **9** |
-| OSV | 9 |
-| npm audit | 3 |
-| Trivy | 2 |
-| Snyk | 2 |
-
-Reproduce: `make bench-accuracy`.
+On a real Node project (`zennoxa-web`, pinned commit) there are **9** known-vulnerable advisories (undici, dompurify, form-data), each verifiable in the public GitHub Advisory / OSV databases. **Shield detected all 9.** Reproduce with `make bench-accuracy`, then run any SCA tool at default config on the same commit to compare for yourself.
 
 ### 🐳 Container
 Scans `Dockerfile` + image config for misconfigurations and end-of-life base images. Verified on Kubernetes Goat.
@@ -82,7 +71,7 @@ We ran Shield across **4 public deliberately-vulnerable applications** and then 
 | OWASP Juice Shop | ~73% |
 | **Overall** | **301 true / 356 total = 84.6%** |
 
-SCA and taint-based findings verified **~95–100% real**; secrets were the weakest class (since hardened).
+SCA and taint-based classes had the highest verified-true rate; secrets had the highest false-positive rate (since hardened).
 _Methodology: internal adversarial verification (each finding independently judged), not a third-party scorecard — reported here for transparency, distinct from the reproducible OWASP result above._
 
 ---
@@ -92,13 +81,13 @@ _Methodology: internal adversarial verification (each finding independently judg
 We publish our weak spots too — credibility is the whole point:
 
 - **Precision-first by design.** We optimise for low false positives, so on some datasets recall is not the highest (e.g. OWASP v1.2: 92.8% precision at ~46% recall). Fewer, higher-confidence findings is our default.
-- **No image-layer OS-CVE scanning yet.** On the vulhub CVE-image corpus Shield is blind to OS-package CVEs baked into images (that's Trivy/Grype territory) — use those alongside Shield for image CVEs.
+- **No image-layer OS-CVE scanning yet.** On the vulhub CVE-image corpus Shield is blind to OS-package CVEs baked into images — pair it with a dedicated image-CVE scanner for that layer.
 - **Coverage is uneven across corpora** — strong on OWASP-Java (0.450) and dependency detection; weaker recall on some niche SAST corpora (e.g. Juliet-C). We show the numbers rather than hide them.
 
 ---
 
 ## 5. Reproduce any of it
 
-- **OWASP Benchmark:** clone the public [OWASP-Benchmark/BenchmarkJava](https://github.com/OWASP-Benchmark/BenchmarkJava), run the Shield CLI, score with OWASP's own tool. Competitor rows are checkable against OWASP's [published scorecards](https://owasp.org/www-project-benchmark/).
+- **OWASP Benchmark:** clone the public [OWASP-Benchmark/BenchmarkJava](https://github.com/OWASP-Benchmark/BenchmarkJava), run the Shield CLI, score with OWASP's own tool. The full ranked leaderboard is published by OWASP at their [official scorecards](https://owasp.org/www-project-benchmark/).
 - **Dependency example:** the 9 advisories are public GitHub Advisory / OSV entries — verify each, then re-run any tool at default config on the same project + commit.
 - **Vulnerable apps:** Juice Shop, DVNA, WebGoat, Kubernetes Goat, terragoat are all public — run `shield scan` on any of them.
