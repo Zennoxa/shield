@@ -48,18 +48,7 @@ _Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible 
 
 ### OWASP Benchmark v1.2 (third-party test suite)
 
-The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases**. The score is **True Positive Rate minus False Positive Rate** (higher is better). Rows marked _OWASP scorecard_ are reproduced from OWASP's independently published Benchmark v1.2 scorecards (retrieved 2026-07-18). The Shield row is measured by us with our own harness against the public OWASP Benchmark test suite.
-
-| Tool | Precision | Benchmark Score | Source |
-|------|-----------|-----------------|--------|
-| Shield | 92.8% | +0.450 | our measurement |
-| FindSecBugs | 66.1% | +0.438 | OWASP scorecard |
-| SonarQube (Java) | 81.1% | +0.323 | OWASP scorecard |
-| OWASP ZAP | 99.6% | +0.172 | OWASP scorecard |
-
-Rows marked _OWASP scorecard_ reflect the tool version and default configuration recorded in the cited OWASP Benchmark v1.2 scorecard as of the retrieval date above; results may differ with other versions, configurations, or releases. OWASP does not endorse, sponsor, or verify this comparison.
-
-On this suite Shield's precision is 92.8% at a True Positive Rate (recall) of roughly 46% — consistent with our precision-first design (see the note below).
+The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.450 at 92.8% precision**, reproducible with our harness against the public suite. To see how other tools score, check OWASP's own published scorecards. Shield's recall on this suite is ~46% — consistent with our precision-first design (see the note below).
 
 ### Dependency (SCA) scanning — worked example on one project
 
@@ -80,7 +69,7 @@ Shield is **precision-first**: it is tuned to keep false positives low so that t
 
 ---
 
-_Trademarks and product names — including OWASP, OWASP Benchmark, FindSecBugs, SonarQube, Semgrep, OWASP ZAP, Trivy, Snyk, OSV, and npm — are the property of their respective owners and are used here for identification only. This project is not affiliated with, endorsed by, or sponsored by any of them, including the OWASP Foundation. The OWASP Benchmark test suite is used under its open-source license._
+_"OWASP" and "OWASP Benchmark" are trademarks of the OWASP Foundation, used here for identification only; this project is not affiliated with, endorsed by, or sponsored by the OWASP Foundation. The OWASP Benchmark test suite is used under its open-source license._
 
 ## Install the CLI
 
