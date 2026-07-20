@@ -128,24 +128,24 @@ Browse and triage findings at **[zennoxa.com](https://zennoxa.com)**.
 
 ## Use it in CI
 
-Fail a pull request when Shield finds high-severity issues:
+Add the **Zennoxa Shield GitHub Action** — one step, no manual install:
 
 ```yaml
 # .github/workflows/security.yml
-name: Shield security scan
-on: [pull_request]
+name: Security
+on: [push, pull_request]
 jobs:
   shield:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Shield CLI
-        run: |
-          curl -L https://github.com/Zennoxa/shield/releases/latest/download/shield-linux-amd64 -o shield
-          chmod +x shield && sudo mv shield /usr/local/bin/shield
-      - name: Scan
-        run: shield scan . --deps
+      - uses: Zennoxa/shield@v0.1.0     # pin to a tag or commit SHA
+        with:
+          args: --deps                 # also scan dependencies (SCA)
+          fail-on-findings: false      # set true to block PRs on findings
 ```
+
+Inputs: `path` (default `.`), `args`, `version` (default `latest`), `fail-on-findings`. More in [`examples/`](examples/).
 
 ## How prioritization works
 
