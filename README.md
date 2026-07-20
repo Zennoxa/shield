@@ -48,14 +48,13 @@ _Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible 
 
 ### OWASP Benchmark v1.2 (third-party test suite)
 
-The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases**. The score is **True Positive Rate minus False Positive Rate** (higher is better). Rows marked _OWASP scorecard_ are reproduced from OWASP's independently published Benchmark v1.2 scorecards (retrieved 2026-07-18). Rows marked our measurement are measured by us with our own harness against the public OWASP Benchmark test suite.
+The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases**. The score is **True Positive Rate minus False Positive Rate** (higher is better). Rows marked _OWASP scorecard_ are reproduced from OWASP's independently published Benchmark v1.2 scorecards (retrieved 2026-07-18). The Shield row is measured by us with our own harness against the public OWASP Benchmark test suite.
 
 | Tool | Precision | Benchmark Score | Source |
 |------|-----------|-----------------|--------|
 | Shield | 92.8% | +0.450 | our measurement |
 | FindSecBugs | 66.1% | +0.438 | OWASP scorecard |
 | SonarQube (Java) | 81.1% | +0.323 | OWASP scorecard |
-| Semgrep | 65.5% | +0.299 | our measurement |
 | OWASP ZAP | 99.6% | +0.172 | OWASP scorecard |
 
 Rows marked _OWASP scorecard_ reflect the tool version and default configuration recorded in the cited OWASP Benchmark v1.2 scorecard as of the retrieval date above; results may differ with other versions, configurations, or releases. OWASP does not endorse, sponsor, or verify this comparison.
@@ -64,19 +63,9 @@ On this suite Shield's precision is 92.8% at a True Positive Rate (recall) of ro
 
 ### Dependency (SCA) scanning — worked example on one project
 
-This is an illustrative worked example on a **single real Node.js project at a pinned commit**, not a multi-project benchmark. All rows below are measured by us with our measurement, with every tool at its default, out-of-the-box configuration.
+This is an illustrative worked example on a **single real Node.js project at a pinned commit**, not a multi-project benchmark.
 
-Ground truth is **9 known-vulnerable advisories** for this project, each independently verifiable in public advisory databases (GitHub Advisory / OSV) and confirmed by at least two of OSV, Trivy, Snyk, and npm audit. The advisory IDs are listed alongside the harness so the ground truth can be checked externally rather than defined by our run. Detection counts reflect what each tool surfaced for this project at default configuration; tools may reach different results with lockfile or configuration flags, so these counts are not a general statement about any tool's dependency-scanning capability.
-
-| Tool | Advisories detected (of 9) |
-|------|----------------------------|
-| Shield | 9 |
-| OSV | 9 |
-| npm audit | 3 |
-| Trivy | 2 |
-| Snyk | 2 |
-
-Semgrep is a SAST tool and does not target dependency scanning in the configuration tested, so it is not included in this table.
+Ground truth is **9 known-vulnerable advisories** for this project (undici, dompurify, form-data), each independently verifiable in public advisory databases (GitHub Advisory / OSV). **Shield detected all 9.** The advisory IDs are listed alongside the harness so the ground truth can be checked externally — verify each, then run any SCA tool at its default configuration on the same commit to compare for yourself.
 
 ### Reproduce it yourself
 
