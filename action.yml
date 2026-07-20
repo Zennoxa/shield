@@ -1,0 +1,65 @@
+name: 'Zennoxa Shield'
+description: 'One-step security scan — SAST, secrets, dependencies, containers & IaC — ranked by real-world risk.'
+author: 'Zennoxa'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  path:
+    description: 'Path to scan.'
+    required: false
+    default: '.'
+  args:
+    description: 'Extra flags passed to `shield scan` (e.g. "--deps").'
+    required: false
+    default: ''
+  version:
+    description: 'Shield CLI release to use — a tag like v0.1.0, or "latest".'
+    required: false
+    default: 'latest'
+  fail-on-findings:
+    description: 'Fail the workflow if Shield reports any findings (true/false).'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Zennoxa Shield
+      shell: bash
+      # Inputs are passed via env and never interpolated into the script, to
+      # avoid command injection (important for a security Action).
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_ARGS: ${{ inputs.args }}
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_FAIL: ${{ inputs.fail-on-findings }}
+      run: |
+        set -euo pipefail
+
+        ver="$INPUT_VERSION"
+        if [ "$ver" = "latest" ]; then
+          ver="$(curl -fsSL https://api.github.com/repos/Zennoxa/shield/releases/latest \
+                  | grep -oE '"tag_name"[^,]*' | head -1 | cut -d'"' -f4)"
+        fi
+
+        echo "::group::Install Zennoxa Shield ${ver}"
+        bin="${RUNNER_TEMP:-/tmp}/shield"
+        curl -fsSL --retry 3 -o "$bin" \
+          "https://github.com/Zennoxa/shield/releases/download/${ver}/shield-linux-amd64"
+        chmod +x "$bin"
+        echo "::endgroup::"
+
+        # $INPUT_ARGS is intentionally word-split (extra CLI flags).
+        set +e
+        "$bin" scan "$INPUT_PATH" $INPUT_ARGS --format json --output shield-report.json
+        set -e
+
+        found="$(grep -oE '"RuleID"' shield-report.json 2>/dev/null | wc -l | tr -d ' ')"
+        echo "Zennoxa Shield reported ${found:-0} finding(s). Report: shield-report.json"
+
+        if [ "$INPUT_FAIL" = "true" ] && [ "${found:-0}" -gt 0 ]; then
+          echo "::error::Zennoxa Shield found ${found} security finding(s)."
+          exit 1
+        fi
