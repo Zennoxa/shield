@@ -30,14 +30,7 @@ Scans `.py .js .ts .java .go .php .rb .cs .cpp .c .kt .rs .swift .dart` (+ IaC/c
 
 **OWASP Benchmark v1.2** (the industry-standard SAST test suite, 2,740 Java cases; score = TPR − FPR):
 
-| Tool | Precision | Benchmark Score | Source |
-|---|---:|---:|---|
-| **Shield** | **92.8%** | **+0.450** | our measurement · reproduce: `make bench-owasp` |
-| FindSecBugs | 66.1% | +0.438 | OWASP published scorecard |
-| SonarQube (Java) | 81.1% | +0.323 | OWASP published scorecard |
-| OWASP ZAP | 99.6% | +0.172 | OWASP published scorecard |
-
-Shield's measured Benchmark Score is **+0.450 at 92.8% precision**, reproducible with `make bench-owasp`. Competitor rows are reproduced from OWASP's own published scorecards for the same suite.
+Shield scores a **Benchmark Score of +0.450 at 92.8% precision** on the suite, reproducible with `make bench-owasp`. To see how other tools score, check OWASP's own [published scorecards](https://owasp.org/www-project-benchmark/).
 
 ### 🔑 Secrets — 26 credential patterns
 Scans **every file** for cloud keys, tokens, private keys, database URLs, provider API keys.
