@@ -73,13 +73,28 @@ _"OWASP" and "OWASP Benchmark" are trademarks of the OWASP Foundation, used here
 
 ## Install the CLI
 
-Grab the latest binary for your platform from **[Releases](https://github.com/Zennoxa/shield/releases/latest)**.
+### Homebrew (macOS / Linux)
 
-**macOS / Linux**
+```bash
+brew install zennoxa/tap/shield
+shield version
+```
+
+### Direct download
+
+Grab the latest binary from **[Releases](https://github.com/Zennoxa/shield/releases/latest)** — optionally verifying it against the published `SHA256SUMS`.
+
 ```bash
 # pick your platform: shield-linux-amd64 · shield-linux-arm64 · shield-darwin-amd64 · shield-darwin-arm64
-curl -L https://github.com/Zennoxa/shield/releases/latest/download/shield-darwin-arm64 -o shield
-chmod +x shield && sudo mv shield /usr/local/bin/shield
+curl -LO https://github.com/Zennoxa/shield/releases/latest/download/shield-darwin-arm64
+curl -LO https://github.com/Zennoxa/shield/releases/latest/download/SHA256SUMS
+
+# verify the download (prints "shield-darwin-arm64: OK")
+# macOS: shasum -a 256 -c SHA256SUMS --ignore-missing
+sha256sum --ignore-missing --check SHA256SUMS
+
+# install onto your PATH
+chmod +x shield-darwin-arm64 && sudo mv shield-darwin-arm64 /usr/local/bin/shield
 shield version
 ```
 
@@ -103,6 +118,25 @@ shield scan . --submit --project YOUR-PROJECT-ID --org YOUR-ORG-ID
 ```
 
 Browse and triage findings at **[zennoxa.com](https://zennoxa.com)**.
+
+## Pre-commit hook
+
+Run Shield before every commit with [pre-commit](https://pre-commit.com). Install the `shield` CLI first (Homebrew or a release binary above), then add to your project's `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/Zennoxa/shield
+    rev: v0.1.0
+    hooks:
+      - id: shield
+```
+
+```bash
+pre-commit install
+pre-commit run shield --all-files
+```
+
+The hook scans your repository and blocks the commit if Shield finds an issue (bypass with `git commit --no-verify`).
 
 ## Use it in CI
 

@@ -1,0 +1,7 @@
+- id: shield
+  name: Zennoxa Shield security scan
+  description: Scan the repository with the Zennoxa Shield CLI (SAST, secrets, dependencies, IaC) and block the commit on any finding. Requires the `shield` binary on your PATH (install via `brew install zennoxa/tap/shield` or a release binary).
+  entry: hooks/shield-scan.sh
+  language: script
+  pass_filenames: false
+  minimum_pre_commit_version: "2.9.0"
