@@ -1,0 +1,41 @@
+name: 🎯 False positive / false negative
+description: A finding that shouldn't have fired, or a real issue Shield missed.
+labels: ["accuracy"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type
+      options:
+        - False positive (flagged safe code)
+        - False negative (missed a real issue)
+    validations:
+      required: true
+  - type: input
+    id: rule
+    attributes:
+      label: Rule ID
+      description: The rule / check ID from the finding (e.g. SHIELD-JS-003), if shown.
+      placeholder: SHIELD-XXX-000
+  - type: input
+    id: language
+    attributes:
+      label: Language / ecosystem
+      placeholder: JavaScript, Go, Python, Dockerfile, Terraform, ...
+    validations:
+      required: true
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Minimal code snippet
+      description: The smallest code that reproduces it. Please redact anything sensitive.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is this wrong?
+      description: For a false positive, why is the code safe? For a false negative, what's the vulnerability?
+    validations:
+      required: true
