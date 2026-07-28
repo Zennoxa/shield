@@ -1,0 +1,54 @@
+{
+  "schema": "zennoxa-shield-benchmark/v1",
+  "note": "First-party, reproducible OWASP Benchmark v1.2 result for Zennoxa Shield. Shield-only \u2014 contains no competitor data.",
+  "tool": {
+    "name": "Zennoxa Shield",
+    "cli_version": "v0.2.0",
+    "scored_with": {
+      "platform": "linux-amd64",
+      "binary_sha256": "95b30e1cc9564d04b1dca8660265a9417426a0a6c5b15503f7780e9b0767cc77"
+    },
+    "all_binary_checksums": "See SHA256SUMS on the v0.2.0 GitHub release.",
+    "verified": {
+      "gate_score": true,
+      "gate_private_domain_grep": 0,
+      "sha256_matches_release": true,
+      "verified_at": "2026-07-28"
+    }
+  },
+  "benchmark": {
+    "suite": "OWASP Benchmark",
+    "version": "1.2",
+    "source": "https://github.com/OWASP-Benchmark/BenchmarkJava",
+    "cases": 2740,
+    "score_metric": "Youden's J (True Positive Rate - False Positive Rate); higher is better",
+    "measured_at": "2026-07-28",
+    "overall": {
+      "benchmark_score": 0.547,
+      "precision": 0.924,
+      "recall": 0.6,
+      "false_positive_rate": 0.053
+    },
+    "per_category_benchmark_score": {
+      "weakrand": 1.0,
+      "crypto": 0.808,
+      "hash": 0.69,
+      "xss": 0.516,
+      "xpathi": 0.467,
+      "cmdi": 0.451,
+      "pathtraver": 0.445,
+      "sqli": 0.303,
+      "trustbound": 0.237,
+      "ldapi": 0.0,
+      "securecookie": 0.0
+    }
+  },
+  "reproduce": [
+    "Install the Shield CLI v0.2.0 (see the release page) and verify its checksum against SHA256SUMS.",
+    "git clone https://github.com/OWASP-Benchmark/BenchmarkJava",
+    "shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode --format sarif --output shield.sarif",
+    "Score shield.sarif against BenchmarkJava/expectedresults-1.2.csv using OWASP's own published scoring tooling."
+  ],
+  "reproducibility_note": "Every figure here is produced by the downloadable v0.2.0 CLI on the public OWASP suite. To compare other tools, use OWASP's own published scorecards; all tools should be run at default configuration.",
+  "trademark": "\"OWASP\" and \"OWASP Benchmark\" are trademarks of the OWASP Foundation, used for identification only; this project is not affiliated with or endorsed by the OWASP Foundation."
+}

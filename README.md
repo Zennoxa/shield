@@ -34,7 +34,7 @@ Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies
 | **Containers** | Dockerfile misconfigurations and image scanning |
 | **Infrastructure-as-Code** | Terraform & Kubernetes misconfigurations *(hosted)* |
 | **License compliance** | Dependency license risks *(hosted)* |
-| **Prioritization** | A **0–100 risk score** per finding — severity + code reachability — so the noise sinks and the exploitable issues rise |
+| **Priority Engine** | A **0–100 risk score** per finding — CVSS + EPSS + CISA KEV + code reachability — so the noise sinks and the exploitable issues rise |
 
 ## Supported languages (SAST)
 
@@ -48,7 +48,7 @@ _Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible 
 
 ### OWASP Benchmark v1.2 (third-party test suite)
 
-The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.450 at 92.8% precision**, reproducible with our harness against the public suite. To see how other tools score, check OWASP's own published scorecards. Shield's recall on this suite is ~46% — consistent with our precision-first design (see the note below).
+The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.547 at 92.4% precision**, reproducible with the released CLI against the public suite — see [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json). To see how other tools score, check OWASP's own published scorecards. Shield's recall on this suite is ~60% — consistent with our precision-first design (see the note below).
 
 ### Dependency (SCA) scanning — worked example on one project
 
@@ -65,7 +65,7 @@ Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single offline 
 
 ### A note on precision
 
-Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.8% precision at roughly 46% recall. We think fewer, higher-confidence findings are the right default — and because every benchmark we measure is reproducible, you can measure the trade-off for your own code.
+Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.4% precision at roughly 60% recall. We think fewer, higher-confidence findings are the right default — and because every benchmark we measure is reproducible, you can measure the trade-off for your own code.
 
 ---
 
@@ -159,9 +159,20 @@ jobs:
 
 Inputs: `path` (default `.`), `args`, `version` (default `latest`), `fail-on-findings`. More in [`examples/`](examples/).
 
-## How prioritization works
+## How prioritization works — the Priority Engine
 
-Most scanners drown you in findings. Shield scores every finding **0–100** by combining its **vulnerability severity** with **code reachability** (is the risky code actually reachable?), so the list is sorted by what's genuinely exploitable — not just what's noisy. You fix the top of the list and move on.
+Most scanners drown you in findings. Shield's **Priority Engine** scores every finding **0–100** from four signals, not just severity:
+
+```
+Priority = CVSS·0.30 + EPSS·0.30 + KEV·0.25 + reachability·0.15
+```
+
+- **CVSS** — the vulnerability's base severity.
+- **EPSS** — FIRST.org's probability it will be exploited in the wild in the next 30 days (where a CVE is known).
+- **CISA KEV** — whether it appears in the Known Exploited Vulnerabilities catalog (proven exploited in the real world).
+- **Reachability** — whether the risky code is actually reachable from an entry point.
+
+So the list sorts by what's genuinely exploitable — not just what's noisy. You fix the top and move on.
 
 ## FAQ
 
