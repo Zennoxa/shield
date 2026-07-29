@@ -24,6 +24,26 @@ Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies
 
 > **This repository** hosts the **Shield CLI releases, documentation, and community issue tracker.** The scanning engine and dashboard are a hosted product at **[zennoxa.com](https://zennoxa.com)** — free during beta.
 
+## 📊 Latest research
+
+**The Severity Illusion — 9 in 10 "Critical" CVEs show no sign of being exploited.**
+We joined three public datasets (NVD CVSS · FIRST EPSS · CISA KEV) across all
+30,409 CVSS-9.0+ CVEs: **89.7%** sit below an EPSS exploitation probability of
+0.10 *and* never appear in CISA's Known Exploited Vulnerabilities catalog — only
+**1.6%** are in KEV. Every figure is reproducible from the three public snapshots.
+
+→ **Read the study:** https://zennoxa.com/research/severity-illusion-critical-cves-2026
+
+<p align="center">
+  <a href="https://zennoxa.com/research/severity-illusion-critical-cves-2026">
+    <img src="docs/severity-illusion-hero.png" width="820"
+         alt="89.7% of CVSS-9.0+ Critical CVEs have EPSS below 0.10 and are absent from CISA KEV">
+  </a>
+</p>
+
+_This is exactly what Shield's Priority Engine solves: it blends CVSS, EPSS, KEV
+and reachability into one 0–100 score so the ~10% that actually matter rise first._
+
 ## What it checks
 
 | Layer | What Shield finds |
