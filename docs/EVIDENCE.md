@@ -11,7 +11,7 @@ _Last measured 2026-07-18. Every figure is a **measured result** on the named pu
 
 | Target (public) | What it is | Layers exercised | Headline result |
 |---|---|---|---|
-| **OWASP Benchmark v1.2** | 2,740 labelled Java test cases | SAST | **Benchmark Score +0.450, 92.8% precision** |
+| **OWASP Benchmark v1.2** | 2,740 labelled Java test cases | SAST | **Benchmark Score +0.547, 92.4% precision** |
 | **OWASP Juice Shop** | Deliberately-insecure JS/Node app | SAST · Secrets · SCA | issues detected across all three layers; audit precision below |
 | **DVNA** | Damn Vulnerable NodeJS App | SAST · SCA · Secrets | ~88% precision (verified audit) |
 | **WebGoat** | OWASP Java training app | SAST · Secrets | ~86% precision (verified audit) |
@@ -30,7 +30,7 @@ Scans `.py .js .ts .java .go .php .rb .cs .cpp .c .kt .rs .swift .dart` (+ IaC/c
 
 **OWASP Benchmark v1.2** (the industry-standard SAST test suite, 2,740 Java cases; score = TPR − FPR):
 
-Shield scores a **Benchmark Score of +0.450 at 92.8% precision** on the suite, reproducible with `make bench-owasp`. To see how other tools score, check OWASP's own [published scorecards](https://owasp.org/www-project-benchmark/).
+Shield scores a **Benchmark Score of +0.547 at 92.4% precision** on the suite, reproducible with the released CLI against the public suite (see [`bench/owasp/benchmark.json`](../bench/owasp/benchmark.json)). To see how other tools score, check OWASP's own [published scorecards](https://owasp.org/www-project-benchmark/).
 
 ### 🔑 Secrets — 26 credential patterns
 Scans **every file** for cloud keys, tokens, private keys, database URLs, provider API keys.
@@ -39,7 +39,7 @@ Verified on Juice Shop / WebGoat / DVNA / Kubernetes Goat — SCA + secret findi
 ### 📦 SCA (dependencies) — via OSV.dev + CycloneDX SBOM
 Scans `package.json`, `package-lock.json`, `pom.xml`, `requirements.txt`, `go.mod`, `Gemfile.lock`, `composer.lock`, …
 
-On a real Node project (`zennoxa-web`, pinned commit) there are **9** known-vulnerable advisories (undici, dompurify, form-data), each verifiable in the public GitHub Advisory / OSV databases. **Shield detected all 9.** Reproduce with `make bench-accuracy`, then run any SCA tool at default config on the same commit to compare for yourself.
+On a real Node project (`zennoxa-web`, pinned commit) there are **9** known-vulnerable advisories (undici, dompurify, form-data), each verifiable in the public GitHub Advisory / OSV databases. **Shield detected all 9.** Reproduce by running `shield scan --deps` on the pinned commit (each advisory is verifiable in the public GitHub Advisory / OSV databases), then run any SCA tool at default config on the same commit to compare for yourself.
 
 ### 🐳 Container
 Scans `Dockerfile` + image config for misconfigurations and end-of-life base images. Verified on Kubernetes Goat.
@@ -73,9 +73,9 @@ _Methodology: internal adversarial verification (each finding independently judg
 
 We publish our weak spots too — credibility is the whole point:
 
-- **Precision-first by design.** We optimise for low false positives, so on some datasets recall is not the highest (e.g. OWASP v1.2: 92.8% precision at ~46% recall). Fewer, higher-confidence findings is our default.
+- **Precision-first by design.** We optimise for low false positives, so on some datasets recall is not the highest (e.g. OWASP v1.2: 92.4% precision at ~60% recall). Fewer, higher-confidence findings is our default.
 - **No image-layer OS-CVE scanning yet.** On the vulhub CVE-image corpus Shield is blind to OS-package CVEs baked into images — pair it with a dedicated image-CVE scanner for that layer.
-- **Coverage is uneven across corpora** — strong on OWASP-Java (0.450) and dependency detection; weaker recall on some niche SAST corpora (e.g. Juliet-C). We show the numbers rather than hide them.
+- **Coverage is uneven across corpora** — strong on OWASP-Java (0.547) and dependency detection; weaker recall on some niche SAST corpora (e.g. Juliet-C). We show the numbers rather than hide them.
 
 ---
 
