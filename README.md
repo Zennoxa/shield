@@ -93,6 +93,19 @@ _"OWASP" and "OWASP Benchmark" are trademarks of the OWASP Foundation, used here
 
 ## Install the CLI
 
+### Quick install (macOS / Linux)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Zennoxa/shield/main/install.sh | sh
+```
+
+Grabs the latest signed release for your platform, verifies it against `SHA256SUMS`,
+and puts `shield` on your PATH. Then scan in one line:
+
+```sh
+shield scan .
+```
+
 ### Homebrew (macOS / Linux)
 
 ```bash
