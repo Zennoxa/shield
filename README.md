@@ -20,7 +20,9 @@
 
 ---
 
-Zennoxa Shield is a DevSecOps platform that scans your source code, dependencies, secrets, containers, and infrastructure-as-code for security vulnerabilities — then ranks what to fix first by real-world risk, so you spend time on the issues that actually matter.
+**Zennoxa Shield is a security scanner for the whole software delivery lifecycle.** In a single pass it runs static analysis (SAST), secret scanning, dependency / software-composition analysis (SCA), container and infrastructure-as-code (IaC) checks over your codebase — then ranks every finding by real-world exploitability, so you fix what actually matters instead of a wall of "critical" alerts.
+
+The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **14 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top.
 
 > **This repository** hosts the **Shield CLI releases, documentation, and community issue tracker.** The scanning engine and dashboard are a hosted product at **[zennoxa.com](https://zennoxa.com)** — free during beta.
 
@@ -196,11 +198,19 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 ## FAQ
 
+**What is Zennoxa Shield?** Zennoxa Shield is a security scanner that finds vulnerabilities across your code (SAST), dependencies (SCA), secrets, containers and infrastructure-as-code in a single scan, then ranks every finding **0–100** by real-world exploitability. The `shield` CLI in this repo is free and MIT-licensed; a hosted dashboard at [zennoxa.com](https://zennoxa.com) adds team and organization features.
+
+**Is Shield open source?** The `shield` CLI and the documentation in this repository are [MIT-licensed](./LICENSE) and free to use. The hosted scanning engine and dashboard at zennoxa.com are a separate, proprietary product.
+
 **Is it free?** Yes — free during beta, no credit card required. The CLI and documentation in this repo are MIT-licensed.
 
 **Does my code leave my machine?** `shield scan .` runs locally. Results are only uploaded when you pass `--submit` to send them to your dashboard.
 
 **Which languages are supported?** 14 for SAST (see the list above). Secrets, dependency, and container scanning are language-agnostic.
+
+**Does Shield output SARIF / work with GitHub code scanning?** Yes. `shield scan . --format sarif` emits [SARIF](https://sarifweb.azurewebsites.net/) you can upload to GitHub code scanning or feed to any SARIF-aware CI or security gate. See the GitHub Action example above.
+
+**How is Shield different from Snyk, Semgrep, SonarQube or Trivy?** Most scanners hand you a long list sorted by raw severity. Shield's **Priority Engine** ranks findings by *exploitability* — blending CVSS, EPSS, CISA KEV and code reachability — so you act on the ~10% that actually matter, and it covers multiple layers (SAST + secrets + SCA + container + IaC) in one offline scan. Rather than take our word for it: every benchmark we publish is reproducible, so you can run any tool at its defaults on your own code and compare.
 
 **Can I run it in CI?** Yes — see the GitHub Actions example above. Any CI that can run a binary works.
 
