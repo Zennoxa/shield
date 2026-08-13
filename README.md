@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-informational)
 ![Status](https://img.shields.io/badge/beta-free%20to%20use-16a34a)
-[![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B0.547-7c6cff)](./bench/owasp/benchmark.json)
+[![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B0.582-7c6cff)](./bench/owasp/benchmark.json)
 [![GitHub stars](https://img.shields.io/github/stars/Zennoxa/shield?style=flat&color=7c6cff)](https://github.com/Zennoxa/shield/stargazers)
 
 </div>
@@ -76,7 +76,7 @@ _Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible 
 
 ### OWASP Benchmark v1.2 (third-party test suite)
 
-The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.547 at 92.4% precision**, reproducible with the released CLI against the public suite — see [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json). To see how other tools score, check OWASP's own published scorecards. Shield's recall on this suite is ~60% — consistent with our precision-first design (see the note below).
+The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.582 at 92.5% precision** (recall 63.7%, false-positive rate 5.5%) — see [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json) for the full per-category breakdown and reproduce steps. To see how other tools score, check OWASP's own published scorecards. Shield's recall on this suite is ~64% — consistent with our precision-first design (see the note below).
 
 ### Dependency (SCA) scanning — worked example on one project
 
@@ -93,7 +93,7 @@ Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single offline 
 
 ### A note on precision
 
-Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.4% precision at roughly 60% recall. We think fewer, higher-confidence findings are the right default — and because every benchmark we measure is reproducible, you can measure the trade-off for your own code.
+Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.5% precision at roughly 64% recall. We think fewer, higher-confidence findings are the right default — and because every benchmark we measure is reproducible, you can measure the trade-off for your own code.
 
 ---
 
