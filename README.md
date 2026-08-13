@@ -220,6 +220,10 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **Can I run it in CI?** Yes — see the GitHub Actions example above. Any CI that can run a binary works.
 
+## 🙌 Contributors welcome
+
+New here? We've labelled a handful of **[good first issues](https://github.com/Zennoxa/shield/labels/good%20first%20issue)** — CI examples (GitLab, Bitbucket, Jenkins), a SARIF → GitHub code-scanning guide, and an example `.shieldignore`. They're self-contained, need no engine internals, and get reviewed quickly. Open a PR or say hi in an issue — see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Community & support
 
 - 🐛 **Bugs / feature requests** → [open an issue](https://github.com/Zennoxa/shield/issues)
