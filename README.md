@@ -10,6 +10,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-informational)
 ![Status](https://img.shields.io/badge/beta-free%20to%20use-16a34a)
+[![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B0.547-7c6cff)](./bench/owasp/benchmark.json)
+[![GitHub stars](https://img.shields.io/github/stars/Zennoxa/shield?style=flat&color=7c6cff)](https://github.com/Zennoxa/shield/stargazers)
 
 </div>
 
