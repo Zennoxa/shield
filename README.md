@@ -154,7 +154,7 @@ Run Shield before every commit with [pre-commit](https://pre-commit.com). Instal
 ```yaml
 repos:
   - repo: https://github.com/Zennoxa/shield
-    rev: v0.1.0
+    rev: v0.3.0
     hooks:
       - id: shield
 ```
@@ -179,7 +179,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Zennoxa/shield@v0.1.0     # pin to a tag or commit SHA
+      - uses: Zennoxa/shield@v0.3.0     # pin to a tag or commit SHA
         with:
           args: --deps                 # also scan dependencies (SCA)
           fail-on-findings: false      # set true to block PRs on findings
