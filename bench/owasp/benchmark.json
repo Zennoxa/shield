@@ -1,54 +1,47 @@
 {
   "schema": "zennoxa-shield-benchmark/v1",
-  "note": "First-party, reproducible OWASP Benchmark v1.2 result for Zennoxa Shield. Shield-only \u2014 contains no competitor data.",
+  "note": "First-party OWASP Benchmark v1.2 result for Zennoxa Shield. Shield-only — contains no competitor data.",
   "tool": {
     "name": "Zennoxa Shield",
-    "cli_version": "v0.2.0",
-    "scored_with": {
-      "platform": "linux-amd64",
-      "binary_sha256": "95b30e1cc9564d04b1dca8660265a9417426a0a6c5b15503f7780e9b0767cc77"
-    },
-    "all_binary_checksums": "See SHA256SUMS on the v0.2.0 GitHub release.",
-    "verified": {
-      "gate_score": true,
-      "gate_private_domain_grep": 0,
-      "sha256_matches_release": true,
-      "verified_at": "2026-07-28"
-    }
+    "engine": "SAST — regex + intra-file taint + dataflow (constant-fold / key-sensitive maps)",
+    "commit": "515fff7",
+    "rules_loaded": 341,
+    "release_note": "This figure is measured on the current Shield engine and is reproducible from the public OWASP dataset with the scoring method below. A version-matched public CLI release is in preparation; the latest published CLI release may score differently."
   },
   "benchmark": {
     "suite": "OWASP Benchmark",
     "version": "1.2",
     "source": "https://github.com/OWASP-Benchmark/BenchmarkJava",
     "cases": 2740,
-    "score_metric": "Youden's J (True Positive Rate - False Positive Rate); higher is better",
-    "measured_at": "2026-07-28",
+    "score_metric": "Benchmark Score = True Positive Rate − False Positive Rate (Youden's J), strict OWASP CWE-per-category match; higher is better",
+    "measured_at": "2026-08-04",
+    "reverified_at": "2026-08-13",
     "overall": {
-      "benchmark_score": 0.547,
-      "precision": 0.924,
-      "recall": 0.6,
-      "false_positive_rate": 0.053
+      "benchmark_score": 0.582,
+      "precision": 0.925,
+      "recall": 0.637,
+      "false_positive_rate": 0.055
     },
     "per_category_benchmark_score": {
+      "securecookie": 1.0,
       "weakrand": 1.0,
       "crypto": 0.808,
       "hash": 0.69,
       "xss": 0.516,
+      "ldapi": 0.499,
       "xpathi": 0.467,
       "cmdi": 0.451,
       "pathtraver": 0.445,
       "sqli": 0.303,
-      "trustbound": 0.237,
-      "ldapi": 0.0,
-      "securecookie": 0.0
+      "trustbound": 0.237
     }
   },
   "reproduce": [
-    "Install the Shield CLI v0.2.0 (see the release page) and verify its checksum against SHA256SUMS.",
-    "git clone https://github.com/OWASP-Benchmark/BenchmarkJava",
-    "shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode --format sarif --output shield.sarif",
-    "Score shield.sarif against BenchmarkJava/expectedresults-1.2.csv using OWASP's own published scoring tooling."
+    "git clone --depth 1 https://github.com/OWASP-Benchmark/BenchmarkJava",
+    "Scan the suite with the Shield CLI: shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode --format sarif --output shield.sarif",
+    "Score shield.sarif against BenchmarkJava/expectedresults-1.2.csv using OWASP's own published scoring tooling (strict CWE-per-category match).",
+    "The score depends on the Shield engine version; this result is from engine commit 515fff7 (measured 2026-08-04, re-verified 2026-08-13)."
   ],
-  "reproducibility_note": "Every figure here is produced by the downloadable v0.2.0 CLI on the public OWASP suite. To compare other tools, use OWASP's own published scorecards; all tools should be run at default configuration.",
+  "reproducibility_note": "Every figure here is produced on the public OWASP Benchmark v1.2 suite (2,740 labelled Java cases). To compare other tools, use OWASP's own published scorecards; run every tool at its default configuration.",
   "trademark": "\"OWASP\" and \"OWASP Benchmark\" are trademarks of the OWASP Foundation, used for identification only; this project is not affiliated with or endorsed by the OWASP Foundation."
 }
