@@ -24,7 +24,7 @@
 
 **Zennoxa Shield is a security scanner for the whole software delivery lifecycle.** In a single pass it runs static analysis (SAST), secret scanning, dependency / software-composition analysis (SCA), container and infrastructure-as-code (IaC) checks over your codebase — then ranks every finding by real-world exploitability, so you fix what actually matters instead of a wall of "critical" alerts.
 
-The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **14 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top.
+The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top.
 
 > **This repository** hosts the **Shield CLI releases, documentation, and community issue tracker.** The scanning engine and dashboard are a hosted product at **[zennoxa.com](https://zennoxa.com)** — free during beta.
 
@@ -52,7 +52,7 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 
 | Layer | What Shield finds |
 | --- | --- |
-| **Code (SAST)** | Insecure patterns across **14 languages** — injection, XSS, weak crypto, unsafe deserialization, and more |
+| **Code (SAST)** | Insecure patterns across **24 languages** (14 with comprehensive coverage) — injection, XSS, weak crypto, unsafe deserialization, and more |
 | **Secrets** | **26 credential patterns** — cloud keys, tokens, private keys, database URLs, provider API keys |
 | **Dependencies (SCA)** | Known CVEs via **[OSV.dev](https://osv.dev)** + a **CycloneDX 1.4 SBOM** |
 | **Containers** | Dockerfile misconfigurations and image scanning |
@@ -62,7 +62,11 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 
 ## Supported languages (SAST)
 
-C · C++ · C# · Dart · Go · Java · JavaScript · Kotlin · PHP · Python · Ruby · Rust · Swift · TypeScript — plus **YAML · Terraform · Kubernetes · CloudFormation** for config/IaC.
+**14 with comprehensive coverage:** C · C++ · C# · Dart · Go · Java · JavaScript · Kotlin · PHP · Python · Ruby · Rust · Swift · TypeScript
+
+**Plus lighter coverage for 10+ more:** Scala · Solidity · PowerShell · Groovy · Lua · Perl · Objective-C · VB.NET · Shell · SQL · Vyper
+
+— and **YAML · Terraform · Kubernetes · CloudFormation · Dockerfile · Helm** for config / IaC.
 
 ## How Shield compares
 > 📊 **Full evidence — every target we tested (OWASP Benchmark · Juice Shop · WebGoat · DVNA · Kubernetes Goat · terragoat), per scan layer, with reproduce commands → [docs/EVIDENCE.md](docs/EVIDENCE.md)**
@@ -208,7 +212,7 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **Does my code leave my machine?** `shield scan .` runs locally. Results are only uploaded when you pass `--submit` to send them to your dashboard.
 
-**Which languages are supported?** 14 for SAST (see the list above). Secrets, dependency, and container scanning are language-agnostic.
+**Which languages are supported?** 24 for SAST — 14 with comprehensive coverage plus lighter coverage for 10+ more (see the list above). Secrets, dependency, and container scanning are language-agnostic.
 
 **Does Shield output SARIF / work with GitHub code scanning?** Yes. `shield scan . --format sarif` emits [SARIF](https://sarifweb.azurewebsites.net/) you can upload to GitHub code scanning or feed to any SARIF-aware CI or security gate. See the GitHub Action example above.
 
