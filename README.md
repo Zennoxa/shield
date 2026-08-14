@@ -16,6 +16,12 @@
 </div>
 
 <p align="center">
+  <img src="docs/priority-demo.gif" alt="Zennoxa Shield's Priority Engine re-sorting findings by real-world exploitability so the reachable, exploitable bug rises to the top" width="820">
+</p>
+
+<p align="center"><em>Shield's <b>Priority Engine</b> re-orders findings by real-world exploitability — the reachable, exploitable bug rises to the top.<br><sub>Hosted dashboard shown; the <code>shield</code> CLI emits the same 0–100 priority scores as text and SARIF.</sub></em></p>
+
+<p align="center">
   <img src="docs/scan-demo.svg" alt="Example: shield scan finds a shell injection, hardcoded secrets and a weak hash" width="720">
 </p>
 
