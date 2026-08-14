@@ -11,30 +11,54 @@ inputs:
     required: false
     default: '.'
   args:
-    description: 'Extra flags passed to `shield scan` (e.g. "--deps").'
+    description: 'Extra flags passed to `shield scan` (e.g. "--deps --submit --project my-app"). These come LAST, so they override the defaults below — including --format and --output.'
     required: false
     default: ''
+  format:
+    description: 'Report format: json or sarif.'
+    required: false
+    default: 'json'
+  output:
+    description: 'Report file path.'
+    required: false
+    default: 'shield-report.json'
   version:
-    description: 'Shield CLI release to use — a tag like v0.1.0, or "latest".'
+    description: 'Shield CLI release to use — a tag like v0.3.0, or "latest". Pin a tag in CI: an unpinned scanner that changes version between runs makes results incomparable.'
     required: false
     default: 'latest'
+  token:
+    description: 'SHIELD_CLI_TOKEN for --submit (pass your repository secret).'
+    required: false
+    default: ''
   fail-on-findings:
-    description: 'Fail the workflow if Shield reports any findings (true/false).'
+    description: 'Fail the workflow if Shield reports any findings (true/false). For severity-based gating prefer passing --fail-on-severity via args.'
     required: false
     default: 'false'
+
+outputs:
+  report:
+    description: 'Path of the report file that was written.'
+    value: ${{ steps.scan.outputs.report }}
+  exit-code:
+    description: 'Exit code of `shield scan` (0 = clean/pass; 2 = gate flags tripped).'
+    value: ${{ steps.scan.outputs.exit-code }}
 
 runs:
   using: 'composite'
   steps:
     - name: Run Zennoxa Shield
+      id: scan
       shell: bash
       # Inputs are passed via env and never interpolated into the script, to
       # avoid command injection (important for a security Action).
       env:
         INPUT_PATH: ${{ inputs.path }}
         INPUT_ARGS: ${{ inputs.args }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_OUTPUT: ${{ inputs.output }}
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_FAIL: ${{ inputs.fail-on-findings }}
+        SHIELD_CLI_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
 
@@ -45,21 +69,41 @@ runs:
         fi
 
         echo "::group::Install Zennoxa Shield ${ver}"
-        bin="${RUNNER_TEMP:-/tmp}/shield"
-        curl -fsSL --retry 3 -o "$bin" \
-          "https://github.com/Zennoxa/shield/releases/download/${ver}/shield-linux-amd64"
+        dir="${RUNNER_TEMP:-/tmp}"
+        bin="${dir}/shield"
+        base="https://github.com/Zennoxa/shield/releases/download/${ver}"
+        curl -fsSL --retry 3 -o "$bin" "${base}/shield-linux-amd64"
+        # Verify against the published checksums — an unverified download would
+        # be a poor look for the step whose whole job is supply-chain safety.
+        curl -fsSL --retry 3 -o "${dir}/SHA256SUMS" "${base}/SHA256SUMS"
+        ( cd "$dir" && grep ' shield-linux-amd64$' SHA256SUMS | sed 's#shield-linux-amd64#shield#' | sha256sum -c - )
         chmod +x "$bin"
+        "$bin" version
         echo "::endgroup::"
 
-        # $INPUT_ARGS is intentionally word-split (extra CLI flags).
+        # Defaults FIRST, caller args LAST — so anything in `args` (including a
+        # different --format/--output) wins. The old order silently forced
+        # json and made SARIF impossible through this Action.
         set +e
-        "$bin" scan "$INPUT_PATH" $INPUT_ARGS --format json --output shield-report.json
+        "$bin" scan "$INPUT_PATH" --format "$INPUT_FORMAT" --output "$INPUT_OUTPUT" $INPUT_ARGS
+        code=$?
         set -e
 
-        found="$(grep -oE '"RuleID"' shield-report.json 2>/dev/null | wc -l | tr -d ' ')"
-        echo "Zennoxa Shield reported ${found:-0} finding(s). Report: shield-report.json"
+        echo "report=$INPUT_OUTPUT" >> "$GITHUB_OUTPUT"
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
 
-        if [ "$INPUT_FAIL" = "true" ] && [ "${found:-0}" -gt 0 ]; then
-          echo "::error::Zennoxa Shield found ${found} security finding(s)."
+        if [ "$code" -ne 0 ] && [ "$code" -ne 2 ]; then
+          echo "::error::shield scan did not complete (exit ${code})"
+          exit "$code"
+        fi
+
+        found=0
+        if [ -f "$INPUT_OUTPUT" ]; then
+          found="$(grep -coE '"(RuleID|ruleId)"' "$INPUT_OUTPUT" 2>/dev/null || echo 0)"
+        fi
+        echo "Zennoxa Shield reported ${found} finding(s). Report: ${INPUT_OUTPUT}"
+
+        if [ "$INPUT_FAIL" = "true" ] && { [ "$code" -eq 2 ] || [ "${found}" -gt 0 ]; }; then
+          echo "::error::Zennoxa Shield gate failed (${found} finding(s), exit ${code})."
           exit 1
         fi
