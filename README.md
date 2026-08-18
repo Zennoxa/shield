@@ -244,3 +244,8 @@ The CLI and documentation in this repository are released under the [MIT License
 ---
 
 <div align="center">© Zennoxa · <a href="https://zennoxa.com">zennoxa.com</a></div>
+
+
+## Add a Jenkins pipeline example
+
+Documentation reference and guidelines for #15.
