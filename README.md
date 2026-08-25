@@ -212,7 +212,7 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **What is Zennoxa Shield?** Zennoxa Shield is a security scanner that finds vulnerabilities across your code (SAST), dependencies (SCA), secrets, containers and infrastructure-as-code in a single scan, then ranks every finding **0–100** by real-world exploitability. The `shield` CLI in this repo is free and MIT-licensed; a hosted dashboard at [zennoxa.com](https://zennoxa.com) adds team and organization features.
 
-**Is Shield open source?** The `shield` CLI and the documentation in this repository are [MIT-licensed](./LICENSE) and free to use. The hosted scanning engine and dashboard at zennoxa.com are a separate, proprietary product.
+**Is the `shield` CLI free? How is it licensed?** The `shield` CLI and the documentation in this repository are [MIT-licensed](./LICENSE) and free to use — run it in CI, redistribute it, no account. The hosted scanning engine and dashboard at zennoxa.com are a separate, proprietary product.
 
 **Is it free?** Yes — free during beta, no credit card required. The CLI and documentation in this repo are MIT-licensed.
 
