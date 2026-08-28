@@ -1,4 +1,4 @@
-name: 🎯 False positive / false negative
+name: False positive / false negative
 description: A finding that shouldn't have fired, or a real issue Shield missed.
 labels: ["accuracy"]
 body:

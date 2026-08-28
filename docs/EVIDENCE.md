@@ -25,29 +25,29 @@ Everything above is a **public** target except the two real Node projects (used 
 
 ## 2. Results by scan layer — what we scan, in which files, how well
 
-### 🔍 SAST (static code analysis) — 14 languages
+### SAST (static code analysis) — 14 languages
 Scans `.py .js .ts .java .go .php .rb .cs .cpp .c .kt .rs .swift .dart` (+ IaC/config formats).
 
 **OWASP Benchmark v1.2** (the industry-standard SAST test suite, 2,740 Java cases; score = TPR − FPR):
 
 Shield scores a **Benchmark Score of +0.547 at 92.4% precision** on the suite, reproducible with the released CLI against the public suite (see [`bench/owasp/benchmark.json`](../bench/owasp/benchmark.json)). To see how other tools score, check OWASP's own [published scorecards](https://owasp.org/www-project-benchmark/).
 
-### 🔑 Secrets — 26 credential patterns
+### Secrets — 26 credential patterns
 Scans **every file** for cloud keys, tokens, private keys, database URLs, provider API keys.
 Verified on Juice Shop / WebGoat / DVNA / Kubernetes Goat — SCA + secret findings verified ~95–100% real in our adversarial audit (see §3).
 
-### 📦 SCA (dependencies) — via OSV.dev + CycloneDX SBOM
+### SCA (dependencies) — via OSV.dev + CycloneDX SBOM
 Scans `package.json`, `package-lock.json`, `pom.xml`, `requirements.txt`, `go.mod`, `Gemfile.lock`, `composer.lock`, …
 
 On a real Node project (`zennoxa-web`, pinned commit) there are **9** known-vulnerable advisories (undici, dompurify, form-data), each verifiable in the public GitHub Advisory / OSV databases. **Shield detected all 9.** Reproduce by running `shield scan --deps` on the pinned commit (each advisory is verifiable in the public GitHub Advisory / OSV databases), then run any SCA tool at default config on the same commit to compare for yourself.
 
-### 🐳 Container
+### Container
 Scans `Dockerfile` + image config for misconfigurations and end-of-life base images. Verified on Kubernetes Goat.
 
-### 🏗️ IaC (infrastructure-as-code)
+### IaC (infrastructure-as-code)
 Scans **Terraform / Kubernetes / CloudFormation**. On **terragoat** (the standard vulnerable-Terraform benchmark): **18 misconfigurations** detected where the layer previously scanned nothing (0 → 18).
 
-### ⚙️ CI/CD
+### CI/CD
 Scans workflow YAML (`.github/workflows/*`, GitLab CI) for pipeline-injection and supply-chain risks.
 
 ---

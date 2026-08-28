@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ Zennoxa Shield
+# Zennoxa Shield
 
 **Find, prioritize & fix code security risks — one scan, every layer.**
 
@@ -34,7 +34,7 @@ The `shield` CLI in this repository is free and MIT-licensed, runs offline from 
 
 > **This repository** hosts the **Shield CLI releases, documentation, and community issue tracker.** The scanning engine and dashboard are a hosted product at **[zennoxa.com](https://zennoxa.com)** — free during beta.
 
-## 📊 Latest research
+## Latest research
 
 **The Severity Illusion — 9 in 10 "Critical" CVEs show no sign of being exploited.**
 We joined three public datasets (NVD CVSS · FIRST EPSS · CISA KEV) across all
@@ -75,10 +75,10 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 — and **YAML · Terraform · Kubernetes · CloudFormation · Dockerfile · Helm** for config / IaC.
 
 ## How Shield compares
-> 📊 **Full evidence — every target we tested (OWASP Benchmark · Juice Shop · WebGoat · DVNA · Kubernetes Goat · terragoat), per scan layer, with reproduce commands → [docs/EVIDENCE.md](docs/EVIDENCE.md)**
+> **Full evidence — every target we tested (OWASP Benchmark · Juice Shop · WebGoat · DVNA · Kubernetes Goat · terragoat), per scan layer, with reproduce commands → [docs/EVIDENCE.md](docs/EVIDENCE.md)**
 
 
-_Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible with the stated `make` command. Figures attributed to OWASP are reproduced from OWASP's independently published scorecards. All tools are run at their default, out-of-the-box configuration; results may vary with tool version, configuration, ruleset, and codebase. Ordering in the tables reflects the stated metric value only and is not a general quality ranking._
+_Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible with the released CLI. Figures attributed to OWASP are reproduced from OWASP's independently published scorecards. All tools are run at their default, out-of-the-box configuration; results may vary with tool version, configuration, ruleset, and codebase. Ordering in the tables reflects the stated metric value only and is not a general quality ranking._
 
 ### OWASP Benchmark v1.2 (third-party test suite)
 
@@ -226,16 +226,16 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **Can I run it in CI?** Yes — see the GitHub Actions example above. Any CI that can run a binary works.
 
-## 🙌 Contributors welcome
+## Contributors welcome
 
 New here? We've labelled a handful of **[good first issues](https://github.com/Zennoxa/shield/labels/good%20first%20issue)** — CI examples (GitLab, Bitbucket, Jenkins), a SARIF → GitHub code-scanning guide, and an example `.shieldignore`. They're self-contained, need no engine internals, and get reviewed quickly. Open a PR or say hi in an issue — see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Community & support
 
-- 🐛 **Bugs / feature requests** → [open an issue](https://github.com/Zennoxa/shield/issues)
-- 🔒 **Found a security vulnerability?** → please report it privately via [GitHub Security Advisories](https://github.com/Zennoxa/shield/security/advisories/new). See [SECURITY.md](./SECURITY.md).
-- 🤝 **Contributing** → [CONTRIBUTING.md](./CONTRIBUTING.md)
-- 🌐 **Product & sign-up** → [zennoxa.com](https://zennoxa.com)
+- **Bugs / feature requests** → [open an issue](https://github.com/Zennoxa/shield/issues)
+- **Found a security vulnerability?** → please report it privately via [GitHub Security Advisories](https://github.com/Zennoxa/shield/security/advisories/new). See [SECURITY.md](./SECURITY.md).
+- **Contributing** → [CONTRIBUTING.md](./CONTRIBUTING.md)
+- **Product & sign-up** → [zennoxa.com](https://zennoxa.com)
 
 ## License
 
