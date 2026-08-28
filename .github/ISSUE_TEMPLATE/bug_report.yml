@@ -1,4 +1,4 @@
-name: 🐛 Bug report
+name: Bug report
 description: Something in the Shield CLI didn't work as expected.
 labels: ["bug"]
 body:
