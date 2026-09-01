@@ -11,7 +11,6 @@
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-informational)
 ![Status](https://img.shields.io/badge/beta-free%20to%20use-16a34a)
 [![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B0.582-7c6cff)](./bench/owasp/benchmark.json)
-[![GitHub stars](https://img.shields.io/github/stars/Zennoxa/shield?style=flat&color=7c6cff)](https://github.com/Zennoxa/shield/stargazers)
 
 </div>
 
@@ -19,7 +18,7 @@
   <img src="docs/priority-demo.gif" alt="Zennoxa Shield's Priority Engine re-sorting findings by real-world exploitability so the reachable, exploitable bug rises to the top" width="820">
 </p>
 
-<p align="center"><em>Shield's <b>Priority Engine</b> re-orders findings by real-world exploitability — the reachable, exploitable bug rises to the top.<br><sub>Hosted dashboard shown; the <code>shield</code> CLI emits the same 0–100 priority scores as text and SARIF.</sub></em></p>
+<p align="center"><em>Shield's <b>Priority Engine</b> re-orders findings by real-world exploitability — the reachable, exploitable bug rises to the top.<br><sub>Hosted dashboard shown. The free <code>shield</code> CLI reports the same findings with severity and CVSS in text, JSON, and SARIF; the 0–100 Priority Engine score is computed by the hosted service.</sub></em></p>
 
 <p align="center">
   <img src="docs/scan-demo.svg" alt="Example: shield scan finds a shell injection, hardcoded secrets and a weak hash" width="720">
@@ -30,7 +29,7 @@
 
 **Zennoxa Shield is a security scanner for the whole software delivery lifecycle.** In a single pass it runs static analysis (SAST), secret scanning, dependency / software-composition analysis (SCA), container and infrastructure-as-code (IaC) checks over your codebase — then ranks every finding by real-world exploitability, so you fix what actually matters instead of a wall of "critical" alerts.
 
-The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top.
+The `shield` CLI in this repository is free and MIT-licensed, runs locally from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages** (dependency scanning pulls advisory data over the network). What sets Shield apart from most scanners is its **Priority Engine**, which blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 exploitability score** so the findings that actually matter rise to the top. That 0–100 score is produced by the hosted engine; the free CLI reports each finding with its severity and CVSS.
 
 > **This repository** hosts the **Shield CLI releases, documentation, and community issue tracker.** The scanning engine and dashboard are a hosted product at **[zennoxa.com](https://zennoxa.com)** — free during beta.
 
@@ -95,7 +94,7 @@ Ground truth is **9 known-vulnerable advisories** for this project (undici, domp
 - **OWASP Benchmark:** the suite is public — install the Shield CLI (above) and run it against [OWASP-Benchmark/BenchmarkJava](https://github.com/OWASP-Benchmark/BenchmarkJava), then score with OWASP's own scoring tool. The competitor rows can be checked directly against OWASP's [published Benchmark scorecards](https://owasp.org/www-project-benchmark/).
 - **Dependency example:** the 9 advisories are public GitHub Advisory / OSV entries — verify each in those databases and re-run any listed tool at its default configuration on the same project and commit.
 
-Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single offline scan, with findings ranked 0-100 using severity, exploitability signals (EPSS/KEV where a CVE is known), and reachability.
+Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in one pass (dependency scanning needs network access for advisory data). The hosted engine then ranks findings 0-100 using severity, exploitability signals (EPSS/KEV where a CVE is known), and reachability; the free CLI reports each finding's severity and CVSS.
 
 ### A note on precision
 
@@ -222,7 +221,7 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **Does Shield output SARIF / work with GitHub code scanning?** Yes. `shield scan . --format sarif` emits [SARIF](https://sarifweb.azurewebsites.net/) you can upload to GitHub code scanning or feed to any SARIF-aware CI or security gate. See the GitHub Action example above.
 
-**How is Shield different from Snyk, Semgrep, SonarQube or Trivy?** Most scanners hand you a long list sorted by raw severity. Shield's **Priority Engine** ranks findings by *exploitability* — blending CVSS, EPSS, CISA KEV and code reachability — so you act on the ~10% that actually matter, and it covers multiple layers (SAST + secrets + SCA + container + IaC) in one offline scan. Rather than take our word for it: every benchmark we publish is reproducible, so you can run any tool at its defaults on your own code and compare.
+**How is Shield different from Snyk, Semgrep, SonarQube or Trivy?** Most scanners hand you a long list sorted by raw severity. Shield's **Priority Engine** ranks findings by *exploitability* — blending CVSS, EPSS, CISA KEV and code reachability — so you act on the ~10% that actually matter, and it covers multiple layers (SAST + secrets + SCA + container + IaC) in one pass. The 0–100 exploitability ranking is produced by the hosted engine; the free CLI reports findings with severity and CVSS. Rather than take our word for it: every benchmark we publish is reproducible, so you can run any tool at its defaults on your own code and compare.
 
 **Can I run it in CI?** Yes — see the GitHub Actions example above. Any CI that can run a binary works.
 

@@ -6,7 +6,7 @@
     "engine": "SAST — regex + intra-file taint + dataflow (constant-fold / key-sensitive maps)",
     "commit": "515fff7",
     "rules_loaded": 341,
-    "release_note": "This figure is measured on the current Shield engine and is reproducible from the public OWASP dataset with the scoring method below. A version-matched public CLI release is in preparation; the latest published CLI release may score differently."
+    "release_note": "This figure is reproducible from the public OWASP dataset with the scoring method below. Verified 2026-09-01 against the shipped public CLI v0.5.0 (shield-linux-amd64, sha256 6c3c55d01733884b6dec564633e94a17703b702c502db3482379a5142da23771): an independent re-score of its SARIF output reproduces this Benchmark Score exactly (precision 0.925, recall 0.637, FPR 0.055)."
   },
   "benchmark": {
     "suite": "OWASP Benchmark",
@@ -37,10 +37,11 @@
     }
   },
   "reproduce": [
+    "Download the Shield CLI v0.5.0 from https://github.com/Zennoxa/shield/releases/tag/v0.5.0 and verify the binary against the release SHA256SUMS.",
     "git clone --depth 1 https://github.com/OWASP-Benchmark/BenchmarkJava",
-    "Scan the suite with the Shield CLI: shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode --format sarif --output shield.sarif",
+    "Scan the suite: shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode --format sarif --output shield.sarif",
     "Score shield.sarif against BenchmarkJava/expectedresults-1.2.csv using OWASP's own published scoring tooling (strict CWE-per-category match).",
-    "The score depends on the Shield engine version; this result is from engine commit 515fff7 (measured 2026-08-04, re-verified 2026-08-13)."
+    "Verified 2026-09-01: the shipped v0.5.0 binary reproduces this Benchmark Score (+0.582); engine commit 515fff7, measured 2026-08-04, re-verified 2026-08-13."
   ],
   "reproducibility_note": "Every figure here is produced on the public OWASP Benchmark v1.2 suite (2,740 labelled Java cases). To compare other tools, use OWASP's own published scorecards; run every tool at its default configuration.",
   "trademark": "\"OWASP\" and \"OWASP Benchmark\" are trademarks of the OWASP Foundation, used for identification only; this project is not affiliated with or endorsed by the OWASP Foundation."
