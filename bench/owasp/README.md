@@ -5,7 +5,7 @@ publishes for the [OWASP Benchmark v1.2](https://owasp.org/www-project-benchmark
 suite (2,740 labelled Java test cases). It is **Shield-only** — it contains no
 competitor data.
 
-**Headline (v0.2.0):** Benchmark Score **+0.547** at **92.4% precision** / **60% recall**.
+**Headline (v0.5.0):** Benchmark Score **+0.582** at **92.5% precision** / **63.7% recall**.
 Score = True Positive Rate − False Positive Rate (Youden's J); higher is better.
 
 ## Reproduce it yourself
