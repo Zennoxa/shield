@@ -6,7 +6,7 @@
     "engine": "SAST — regex + intra-file taint + dataflow (constant-fold / key-sensitive maps)",
     "commit": "515fff7",
     "rules_loaded": 341,
-    "release_note": "This figure is measured on the current Shield engine and is reproducible from the public OWASP dataset with the scoring method below. A version-matched public CLI release is in preparation; the latest published CLI release may score differently."
+    "release_note": "Measured with the public CLI release v0.5.0 and re-scored with identical results on v0.7.0 (2026-09-21): +0.582, precision 92.5%, recall 63.7%, FPR 5.5% over 2,740 cases. The scan is one public command; the script that maps findings to the suite's categories is not published in this repository yet."
   },
   "benchmark": {
     "suite": "OWASP Benchmark",
