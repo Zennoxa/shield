@@ -7,7 +7,7 @@
 [Website](https://zennoxa.com) · [Report an issue](https://github.com/Zennoxa/shield/issues)
 
 [![Latest release](https://img.shields.io/github/v/release/Zennoxa/shield?label=CLI&color=4f46e5)](https://github.com/Zennoxa/shield/releases/latest)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Binary: MIT, source closed](https://img.shields.io/badge/binary-MIT%20%C2%B7%20source%20closed-blue.svg)](./LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-informational)
 ![Status](https://img.shields.io/badge/beta-free%20to%20use-16a34a)
 [![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B0.582-7c6cff)](./bench/owasp/benchmark.json)
@@ -27,11 +27,11 @@
 
 ---
 
-**Zennoxa Shield is a security scanner for the whole software delivery lifecycle.** In a single pass it runs static analysis (SAST), secret scanning, dependency / software-composition analysis (SCA), container and infrastructure-as-code (IaC) checks over your codebase — then ranks every finding by real-world exploitability, so you fix what actually matters instead of a wall of "critical" alerts.
+**Zennoxa Shield is a static security scanner for source code, secrets, dependency manifests, Dockerfiles and infrastructure-as-code.** In one command it runs static analysis (SAST), secret scanning, dependency / software-composition analysis (SCA), container and infrastructure-as-code (IaC) checks over your codebase — then ranks every finding by real-world exploitability, so you fix what actually matters instead of a wall of "critical" alerts.
 
-The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top. Offline, the CLI scores with CVSS and reachability only (so at most 45 of 100) and adds EPSS and KEV for dependency CVEs when you pass `--deps`; the hosted dashboard keeps those two signals fresh for every finding that has a CVE.
+The `shield` CLI is a free binary released under the MIT license (its source is not public and is not in this repository). It runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **25 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top. Offline, the CLI scores with CVSS and reachability only (so at most 45 of 100) and adds EPSS and KEV for dependency CVEs when you pass `--deps`; the hosted dashboard keeps those two signals fresh for every finding that has a CVE.
 
-> **This repository** hosts the Shield CLI releases, documentation and the community issue tracker. The CLI binary is MIT-licensed and contains the scanning engine, so scans run on your machine. The engine source code is not public. The dashboard at **[zennoxa.com](https://zennoxa.com)** is a separate, optional hosted product — free during beta.
+> **This repository** hosts the Shield CLI releases, documentation and the community issue tracker. The scanning engine is compiled into the CLI binary and runs on your machine; its source is not public. The dashboard at **[zennoxa.com](https://zennoxa.com)** is a separate proprietary service that stores and re-ranks the findings you choose to submit — free during beta.
 
 ## Latest research
 
@@ -57,10 +57,10 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 
 | Layer | What Shield finds |
 | --- | --- |
-| **Code (SAST)** | Insecure patterns across **24 languages** (14 with comprehensive coverage) — injection, XSS, weak crypto, unsafe deserialization, and more |
+| **Code (SAST)** | Insecure patterns across **25 languages** (14 with comprehensive coverage, a small number of rules each for the other 11) — injection, XSS, weak crypto, unsafe deserialization, and more |
 | **Secrets** | **26 credential patterns** — cloud keys, tokens, private keys, database URLs, provider API keys |
 | **Dependencies (SCA)** | Known CVEs via **[OSV.dev](https://osv.dev)** + a **CycloneDX 1.4 SBOM** |
-| **Containers** | Dockerfile misconfigurations and image scanning |
+| **Containers** | Dockerfile and Kubernetes manifest misconfigurations; `shield image-scan` inspects a registry image's config and build history without pulling layers (`--os-cve` adds OS-package CVEs) |
 | **Infrastructure-as-Code** | Terraform & Kubernetes misconfigurations |
 | **License compliance** | Dependency license risks *(hosted)* |
 | **Priority Engine** | A **0–100 priority score** — CVSS + EPSS + CISA KEV + code reachability ([what the CLI computes offline](#how-prioritization-works--the-priority-engine)) — so the noise sinks and the exploitable issues rise |
@@ -69,7 +69,7 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 
 **14 with comprehensive coverage:** C · C++ · C# · Dart · Go · Java · JavaScript · Kotlin · PHP · Python · Ruby · Rust · Swift · TypeScript
 
-**Plus lighter coverage for 10+ more:** Scala · Solidity · PowerShell · Groovy · Lua · Perl · Objective-C · VB.NET · Shell · SQL · Vyper
+**Plus lighter coverage for 11 more:** Scala · Solidity · PowerShell · Groovy · Lua · Perl · Objective-C · VB.NET · Shell · SQL · Vyper
 
 — and **YAML · Terraform · Kubernetes · CloudFormation (basic) · Dockerfile · Helm** for config / IaC.
 
@@ -133,6 +133,10 @@ shield version
 
 **Windows** — download `shield-windows-amd64.exe` from Releases and add it to your `PATH`.
 
+### What the install script does
+
+`curl -sSL https://zennoxa.com/install | sh` detects your OS and CPU, downloads the matching binary and `SHA256SUMS` from the latest GitHub release, and aborts if the SHA-256 does not match. It installs to `/usr/local/bin` (using `sudo` only if that directory is not writable) or to `SHIELD_INSTALL_DIR` if you set it. Two things to know: the checksum detects a corrupted download, not a compromised release, and if `SHA256SUMS` cannot be fetched or no SHA-256 tool is present the script warns and installs without verification. If that matters to you, use the direct download above and verify by hand.
+
 ## Quick start
 
 ```bash
@@ -159,6 +163,8 @@ Since v0.7.0 the same binary runs as a [Model Context Protocol](https://modelcon
 ```bash
 # Claude Code
 claude mcp add shield -- shield mcp
+# or confine scans to the project directory:
+claude mcp add shield -- shield mcp --root .
 ```
 
 ```json
@@ -183,7 +189,7 @@ What touches the network:
 | `shield_scan` with `deps=true` | Package names and versions to OSV.dev, CVE ids to FIRST EPSS, CISA KEV feed download. No source code |
 | Tool results | Returned to your agent (finding metadata and the flagged line), which forwards them to its model provider like any tool output |
 
-Things to know: secret values in secret findings are masked before they are returned (pattern-based, best effort). Shield does not edit code; the agent does, and findings carry a `fingerprint` that stays stable across scans so a rescan shows what was fixed. One scan runs at a time, with `--scan-timeout` (default 10m); `shield mcp --root DIR` rejects scan paths outside DIR (a path check: symlinks inside DIR are still followed), and `/`, `/proc`, `/sys`, `/dev`, `/run` and `/boot` are refused as scan roots. We have run the scan and finding tools end to end with Claude Code 2.1 and with the official MCP Go SDK client; other stdio clients should work but are not tested by us yet. More detail: [zennoxa.com/mcp](https://zennoxa.com/mcp).
+Things to know: the tools only read from disk. Secret values in secret findings are masked before they are returned (pattern-based, best effort). Shield does not edit code; the agent does. Each finding carries a `fingerprint`, a hash of the rule, file path and flagged line text: it survives line-number shifts and changes when the file is renamed or that line is edited, so a rescan shows what was fixed. One scan runs at a time, with `--scan-timeout` (default 10m); `shield mcp --root DIR` rejects scan paths outside DIR (a path check: symlinks inside DIR are still followed), and `/`, `/proc`, `/sys`, `/dev`, `/run` and `/boot` are refused as scan roots. We have run the scan and finding tools end to end with Claude Code 2.1 and with the official MCP Go SDK client; other stdio clients should work but are not tested by us yet. More detail: [zennoxa.com/mcp](https://zennoxa.com/mcp).
 
 ## Pre-commit hook
 
@@ -202,7 +208,7 @@ pre-commit install
 pre-commit run shield --all-files
 ```
 
-The hook scans your repository and blocks the commit if Shield finds an issue (bypass with `git commit --no-verify`).
+The hook scans the whole repository and blocks the commit on any finding of any severity, and also if the scan itself fails (bypass with `git commit --no-verify`).
 
 ## Use it in CI
 
@@ -219,6 +225,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Zennoxa/shield@v0.7.0     # pin to a tag or commit SHA
         with:
+          version: v0.7.0              # pins the scanner binary too (default: latest)
           args: --deps                 # also scan dependencies (SCA)
           fail-on-findings: false      # set true to block PRs on findings
 ```
@@ -236,7 +243,7 @@ Priority = CVSS·0.30 + EPSS·0.30 + KEV·0.25 + reachability·0.15
 - **CVSS** — the vulnerability's base severity.
 - **EPSS** — FIRST.org's probability it will be exploited in the wild in the next 30 days (where a CVE is known).
 - **CISA KEV** — whether it appears in the Known Exploited Vulnerabilities catalog (proven exploited in the real world).
-- **Reachability** — whether the risky code is actually reachable from an entry point.
+- **Reachability** — true when Shield's taint pass traces untrusted input to the flagged sink within the same file. It is not call-graph analysis; cross-file flows are missed.
 
 So the list sorts by what's genuinely exploitable — not just what's noisy. You fix the top and move on.
 
@@ -246,13 +253,13 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **What is Zennoxa Shield?** Zennoxa Shield is a security scanner that finds vulnerabilities across your code (SAST), dependencies (SCA), secrets, containers and infrastructure-as-code in a single scan, then ranks every finding **0–100** by real-world exploitability. The `shield` CLI in this repo is free and MIT-licensed; a hosted dashboard at [zennoxa.com](https://zennoxa.com) adds team and organization features.
 
-**Is the `shield` CLI free? How is it licensed?** The `shield` CLI and the documentation in this repository are [MIT-licensed](./LICENSE) and free to use — run it in CI, redistribute it, no account. The hosted scanning engine and dashboard at zennoxa.com are a separate, proprietary product.
+**Is the `shield` CLI free? How is it licensed?** The `shield` binary and the documentation in this repository are released under the [MIT license](./LICENSE): free to use, run in CI and redistribute, no account. The engine source is not public. The hosted dashboard at zennoxa.com is a separate, proprietary service.
 
-**Is it free?** Yes — free during beta, no credit card required. The CLI and documentation in this repo are MIT-licensed.
+**Is it free?** The CLI is free with no time limit. The hosted dashboard is free during beta for up to 5 repositories, no credit card; pricing after the beta has not been set.
 
-**Does my code leave my machine?** `shield scan .` runs locally and makes no network requests. With `--deps`, package names and versions are sent to OSV.dev, CVE ids to FIRST EPSS, and the CISA KEV feed is downloaded; source code is not sent. Findings, each with the one flagged source line, are uploaded only when you pass `--submit` to send them to your dashboard.
+**Does my code leave my machine?** `shield scan .` runs locally and makes no network requests. With `--deps`, package names and versions are sent to OSV.dev, CVE ids to FIRST EPSS, and the CISA KEV feed is downloaded; source code is not sent. Nothing is uploaded unless you pass `--submit`. Then, per finding, the CLI sends the rule id, severity, file path, line number, the flagged source line, the recommendation and the CVE id, plus the git branch and commit. For secret findings the flagged line is the line that contains the secret, so review what you submit.
 
-**Which languages are supported?** 24 for SAST — 14 with comprehensive coverage plus lighter coverage for 10+ more (see the list above). Secret and container scanning are language-agnostic; dependency scanning covers 10 ecosystems (npm, PyPI, Go, Maven, NuGet, Packagist, Pub, RubyGems, crates.io, Hex).
+**Which languages are supported?** 25 for SAST — 14 with comprehensive coverage plus a small number of rules each for 11 more (see the list above). Secret and container scanning are language-agnostic; dependency scanning covers 10 ecosystems (npm, PyPI, Go, Maven, NuGet, Packagist, Pub, RubyGems, crates.io, Hex).
 
 **Does Shield output SARIF / work with GitHub code scanning?** Yes. `shield scan . --format sarif` emits [SARIF](https://sarifweb.azurewebsites.net/) you can upload to GitHub code scanning or feed to any SARIF-aware CI or security gate. See the GitHub Action example above.
 
@@ -262,7 +269,7 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 ## Contributors welcome
 
-New here? We've labelled a handful of **[good first issues](https://github.com/Zennoxa/shield/labels/good%20first%20issue)** — CI examples (GitLab, Bitbucket, Jenkins), a SARIF → GitHub code-scanning guide, and an example `.shieldignore`. They're self-contained, need no engine internals, and get reviewed quickly. Open a PR or say hi in an issue — see [CONTRIBUTING.md](./CONTRIBUTING.md).
+New here? We've labelled a handful of **[good first issues](https://github.com/Zennoxa/shield/labels/good%20first%20issue)** — CI examples (GitLab, Bitbucket, Jenkins), a SARIF → GitHub code-scanning guide, and an example `.shieldignore`. They're self-contained and need no engine internals. The engine source is closed, so bug and false-positive reports are the most useful contribution. Open a PR or say hi in an issue — see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Community & support
 
@@ -273,7 +280,7 @@ New here? We've labelled a handful of **[good first issues](https://github.com/Z
 
 ## License
 
-The CLI and documentation in this repository are released under the [MIT License](./LICENSE). The hosted scanning engine and dashboard are a separate, proprietary product.
+The CLI binary and the documentation in this repository are released under the [MIT License](./LICENSE). The engine source is not public. The hosted dashboard is a separate, proprietary service.
 
 ---
 
