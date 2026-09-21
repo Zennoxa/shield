@@ -153,6 +153,22 @@ shield scan . --submit --project YOUR-PROJECT-ID --org YOUR-ORG-ID
 
 Browse and triage findings at **[zennoxa.com](https://zennoxa.com)**.
 
+## Use Shield from your AI coding agent (MCP)
+
+The same binary runs as a [Model Context Protocol](https://modelcontextprotocol.io) server, so Claude Code, Cursor, Windsurf or any MCP client can scan a repository, page through findings by priority, read the flagged code with fix guidance, look up a rule, apply a gate and generate an SBOM — all on your machine.
+
+```bash
+# Claude Code
+claude mcp add shield -- shield mcp
+```
+
+```json
+// Cursor, Windsurf and other MCP clients (mcp.json)
+{ "mcpServers": { "shield": { "command": "shield", "args": ["mcp"] } } }
+```
+
+Tools: `shield_scan`, `shield_findings`, `shield_finding`, `shield_rule`, `shield_gate`, `shield_sbom`. Only a scan with `deps=true` uses the network (OSV.dev, FIRST EPSS, CISA KEV), exactly like `shield scan --deps`.
+
 ## Pre-commit hook
 
 Run Shield before every commit with [pre-commit](https://pre-commit.com). Install the `shield` CLI first (Homebrew or a release binary above), then add to your project's `.pre-commit-config.yaml`:
