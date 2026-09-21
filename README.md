@@ -18,7 +18,7 @@
   <img src="docs/priority-demo.gif" alt="Zennoxa Shield's Priority Engine re-sorting findings by real-world exploitability so the reachable, exploitable bug rises to the top" width="820">
 </p>
 
-<p align="center"><em>Shield's <b>Priority Engine</b> re-orders findings by real-world exploitability — the reachable, exploitable bug rises to the top.<br><sub>Hosted dashboard shown. The <code>shield</code> CLI prints an offline priority per finding in text, JSON and SARIF: CVSS and reachability, plus EPSS and CISA KEV for dependency CVEs when you pass <code>--deps</code>.</sub></em></p>
+<p align="center"><em>Shield's <b>Priority Engine</b> re-orders findings by real-world exploitability — the reachable, exploitable bug rises to the top.<br><sub>Hosted dashboard shown. The <code>shield</code> CLI prints an offline priority for every finding that has a CVSS value, in text, JSON and SARIF: CVSS and reachability, plus EPSS and CISA KEV for dependency CVEs when you pass <code>--deps</code>.</sub></em></p>
 
 <p align="center">
   <img src="docs/scan-demo.svg" alt="Example: shield scan finds a shell injection, hardcoded secrets and a weak hash" width="720">
@@ -29,7 +29,7 @@
 
 **Zennoxa Shield is a security scanner for the whole software delivery lifecycle.** In a single pass it runs static analysis (SAST), secret scanning, dependency / software-composition analysis (SCA), container and infrastructure-as-code (IaC) checks over your codebase — then ranks every finding by real-world exploitability, so you fix what actually matters instead of a wall of "critical" alerts.
 
-The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top. Offline, the CLI scores with CVSS and reachability only (so at most 45 of 100) and adds EPSS and KEV for dependency CVEs when you pass `--deps`; the hosted dashboard computes the full ranking for every finding.
+The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top. Offline, the CLI scores with CVSS and reachability only (so at most 45 of 100) and adds EPSS and KEV for dependency CVEs when you pass `--deps`; the hosted dashboard keeps those two signals fresh for every finding that has a CVE.
 
 > **This repository** hosts the Shield CLI releases, documentation and the community issue tracker. The CLI binary is MIT-licensed and contains the scanning engine, so scans run on your machine. The engine source code is not public. The dashboard at **[zennoxa.com](https://zennoxa.com)** is a separate, optional hosted product — free during beta.
 
@@ -63,7 +63,7 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 | **Containers** | Dockerfile misconfigurations and image scanning |
 | **Infrastructure-as-Code** | Terraform & Kubernetes misconfigurations |
 | **License compliance** | Dependency license risks *(hosted)* |
-| **Priority Engine** | A **0–100 risk score** per finding — CVSS + EPSS + CISA KEV + code reachability — so the noise sinks and the exploitable issues rise |
+| **Priority Engine** | A **0–100 priority score** — CVSS + EPSS + CISA KEV + code reachability ([what the CLI computes offline](#how-prioritization-works--the-priority-engine)) — so the noise sinks and the exploitable issues rise |
 
 ## Supported languages (SAST)
 
@@ -71,34 +71,34 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 
 **Plus lighter coverage for 10+ more:** Scala · Solidity · PowerShell · Groovy · Lua · Perl · Objective-C · VB.NET · Shell · SQL · Vyper
 
-— and **YAML · Terraform · Kubernetes · CloudFormation · Dockerfile · Helm** for config / IaC.
+— and **YAML · Terraform · Kubernetes · CloudFormation (basic) · Dockerfile · Helm** for config / IaC.
 
-## How Shield compares
-> **Full evidence — every target we tested (OWASP Benchmark · Juice Shop · WebGoat · DVNA · Kubernetes Goat · terragoat), per scan layer, with reproduce commands → [docs/EVIDENCE.md](docs/EVIDENCE.md)**
+## Measured results
 
+> Per-target notes for everything we tested (OWASP Benchmark, Juice Shop, WebGoat, DVNA, Kubernetes Goat, terragoat) are in [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
-_Comparison as of 2026-07-18. Every figure we measure ourselves is reproducible with the released CLI. Figures attributed to OWASP are reproduced from OWASP's independently published scorecards. All tools are run at their default, out-of-the-box configuration; results may vary with tool version, configuration, ruleset, and codebase. Ordering in the tables reflects the stated metric value only and is not a general quality ranking._
+_Measured by us with the released CLI at its default configuration. Results vary with version, configuration and codebase. Last re-scored on the v0.7.0 release binary on 2026-09-21._
 
 ### OWASP Benchmark v1.2 (third-party test suite)
 
-The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.582 at 92.5% precision** (recall 63.7%, false-positive rate 5.5%) — see [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json) for the full per-category breakdown and reproduce steps. To see how other tools score, check OWASP's own published scorecards. Shield's recall on this suite is ~64% — consistent with our precision-first design (see the note below).
+The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.582 at 92.5% precision** (recall 63.7%, false-positive rate 5.5%) — see [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json) for the per-category breakdown. The benchmark is Java only; it says nothing about the other languages or the secret, dependency, container and IaC layers.
 
-### Dependency (SCA) scanning — worked example on one project
+What you can and cannot check today: the suite and its expected-results file are public, and the scan is one command (`shield scan <BenchmarkJava>/src/main/java/org/owasp/benchmark/testcode --format json --output findings.json`). The script that maps Shield's findings to the suite's categories and computes the score is not in this repository yet, so until it is, treat the number as our measurement rather than something you can reproduce end to end.
 
-This is an illustrative worked example on a **single real Node.js project at a pinned commit**, not a multi-project benchmark.
+### Dependency (SCA) scanning — a run you can repeat
 
-Ground truth is **9 known-vulnerable advisories** for this project (undici, dompurify, form-data), each independently verifiable in public advisory databases (GitHub Advisory / OSV). **Shield detected all 9.** The advisory IDs are listed alongside the harness so the ground truth can be checked externally — verify each, then run any SCA tool at its default configuration on the same commit to compare for yourself.
+```bash
+git clone https://github.com/appsecco/dvna && cd dvna && git checkout 9ba473a
+shield scan . --deps
+```
 
-### Reproduce it yourself
-
-- **OWASP Benchmark:** the suite is public — install the Shield CLI (above) and run it against [OWASP-Benchmark/BenchmarkJava](https://github.com/OWASP-Benchmark/BenchmarkJava), then score with OWASP's own scoring tool. The competitor rows can be checked directly against OWASP's [published Benchmark scorecards](https://owasp.org/www-project-benchmark/).
-- **Dependency example:** the 9 advisories are public GitHub Advisory / OSV entries — verify each in those databases and re-run any listed tool at its default configuration on the same project and commit.
+With v0.7.0 on 2026-09-21 this reports 35 dependency findings for DVNA's 19 declared packages, for example CVE-2017-5941 (node-serialize 0.0.4) and CVE-2022-29078 (ejs 2.5.7), next to 10 code findings and 2 container findings. Advisory data comes from [OSV.dev](https://osv.dev), so the count grows as new advisories are published, and the priority of dependency findings moves with EPSS.
 
 Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single local scan (dependency lookups with `--deps` need the network), with findings ranked by severity, reachability and, for dependency CVEs, EPSS/KEV.
 
 ### A note on precision
 
-Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.5% precision at roughly 64% recall. We think fewer, higher-confidence findings are the right default — and because every benchmark we measure is reproducible, you can measure the trade-off for your own code.
+Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.5% precision at roughly 64% recall. We think fewer, higher-confidence findings are the right default, and the CLI is free to run on your own code so you can judge the trade-off there.
 
 ---
 
@@ -170,7 +170,7 @@ claude mcp add shield -- shield mcp
 | --- | --- |
 | `shield_scan` | Scan a directory; returns a scan id, severity counts and the top 25 findings by priority |
 | `shield_findings` | Page and filter a scan's findings (severity, rule, file, minimum priority, reachable only) |
-| `shield_finding` | One finding: file and line, flagged snippet, recommendation, rule guidance for catalogued SAST rules |
+| `shield_finding` | One finding: file and line, flagged snippet, the recommendation where the engine has one (secret and Terraform findings carry only title and CWE), rule guidance for catalogued SAST rules |
 | `shield_rule` | Look up a catalogued SAST rule by id |
 | `shield_gate` | Pass/fail on a severity, grade or score threshold |
 | `shield_sbom` | CycloneDX or SPDX components, paged |
@@ -183,7 +183,7 @@ What touches the network:
 | `shield_scan` with `deps=true` | Package names and versions to OSV.dev, CVE ids to FIRST EPSS, CISA KEV feed download. No source code |
 | Tool results | Returned to your agent (finding metadata and the flagged line), which forwards them to its model provider like any tool output |
 
-Things to know: secret values in secret findings are masked before they are returned (pattern-based, best effort). Shield does not edit code; the agent does, and findings carry a `fingerprint` that stays stable across scans so a rescan shows what was fixed. One scan runs at a time, with `--scan-timeout` (default 10m); `shield mcp --root DIR` confines scans to one directory tree. We have run it end to end with Claude Code and the MCP Go SDK client; other stdio clients should work but are not tested by us yet. More detail: [zennoxa.com/mcp](https://zennoxa.com/mcp).
+Things to know: secret values in secret findings are masked before they are returned (pattern-based, best effort). Shield does not edit code; the agent does, and findings carry a `fingerprint` that stays stable across scans so a rescan shows what was fixed. One scan runs at a time, with `--scan-timeout` (default 10m); `shield mcp --root DIR` rejects scan paths outside DIR (a path check: symlinks inside DIR are still followed), and `/`, `/proc`, `/sys`, `/dev`, `/run` and `/boot` are refused as scan roots. We have run the scan and finding tools end to end with Claude Code 2.1 and with the official MCP Go SDK client; other stdio clients should work but are not tested by us yet. More detail: [zennoxa.com/mcp](https://zennoxa.com/mcp).
 
 ## Pre-commit hook
 
@@ -227,7 +227,7 @@ Inputs: `path` (default `.`), `args`, `version` (default `latest`), `fail-on-fin
 
 ## How prioritization works — the Priority Engine
 
-Most scanners drown you in findings. Shield's **Priority Engine** scores every finding **0–100** from four signals, not just severity:
+Most scanners drown you in findings. Shield's **Priority Engine** scores findings **0–100** from four signals, not just severity:
 
 ```
 Priority = CVSS·0.30 + EPSS·0.30 + KEV·0.25 + reachability·0.15
@@ -240,7 +240,7 @@ Priority = CVSS·0.30 + EPSS·0.30 + KEV·0.25 + reachability·0.15
 
 So the list sorts by what's genuinely exploitable — not just what's noisy. You fix the top and move on.
 
-**What the CLI computes offline.** A signal that is not available contributes zero. A plain `shield scan .` has CVSS and reachability, so its scores top out at 45. With `--deps`, dependency CVEs also get EPSS and CISA KEV. The hosted dashboard has all four signals for every finding. The CLI prints which basis it used (`PriorityBasis` in JSON and SARIF).
+**What the CLI computes offline.** A signal that is not available contributes zero. A plain `shield scan .` has CVSS and reachability, so its scores top out at 45. With `--deps`, dependency CVEs also get EPSS and CISA KEV. Findings without a CVE (code, secrets, configuration) have no EPSS or KEV anywhere, so 45 is their ceiling on the dashboard too; the hosted dashboard keeps EPSS and CISA KEV fresh for findings that do have a CVE. Findings whose rule has no CVSS value (container-config and Terraform rules today) are not scored. The CLI prints which basis it used: `PriorityBasis` in JSON, `properties.priorityBasis` in SARIF, and a legend line in text output.
 
 ## FAQ
 
@@ -252,11 +252,11 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **Does my code leave my machine?** `shield scan .` runs locally and makes no network requests. With `--deps`, package names and versions are sent to OSV.dev, CVE ids to FIRST EPSS, and the CISA KEV feed is downloaded; source code is not sent. Findings, each with the one flagged source line, are uploaded only when you pass `--submit` to send them to your dashboard.
 
-**Which languages are supported?** 24 for SAST — 14 with comprehensive coverage plus lighter coverage for 10+ more (see the list above). Secrets, dependency, and container scanning are language-agnostic.
+**Which languages are supported?** 24 for SAST — 14 with comprehensive coverage plus lighter coverage for 10+ more (see the list above). Secret and container scanning are language-agnostic; dependency scanning covers 10 ecosystems (npm, PyPI, Go, Maven, NuGet, Packagist, Pub, RubyGems, crates.io, Hex).
 
 **Does Shield output SARIF / work with GitHub code scanning?** Yes. `shield scan . --format sarif` emits [SARIF](https://sarifweb.azurewebsites.net/) you can upload to GitHub code scanning or feed to any SARIF-aware CI or security gate. See the GitHub Action example above.
 
-**How is Shield different from Snyk, Semgrep, SonarQube or Trivy?** Most scanners hand you a long list sorted by raw severity. Shield's **Priority Engine** ranks findings by *exploitability* — blending CVSS, EPSS, CISA KEV and code reachability — so you act on the ~10% that actually matter, and it covers multiple layers (SAST + secrets + SCA + container + IaC) in one offline scan. Rather than take our word for it: every benchmark we publish is reproducible, so you can run any tool at its defaults on your own code and compare.
+**How is Shield different from Snyk, Semgrep, SonarQube or Trivy?** Most scanners hand you a long list sorted by raw severity. Shield's **Priority Engine** ranks findings by *exploitability* — blending CVSS, EPSS, CISA KEV and code reachability — so you act on the ~10% that actually matter, and it covers multiple layers in one scan: SAST, secrets, container and IaC checks run offline, and SCA with `--deps` queries OSV.dev. Rather than take our word for it, run it next to any other tool at its defaults on your own code and compare.
 
 **Can I run it in CI?** Yes — see the GitHub Actions example above. Any CI that can run a binary works.
 
