@@ -11,7 +11,6 @@
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-informational)
 ![Status](https://img.shields.io/badge/beta-free%20to%20use-16a34a)
 [![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B0.582-7c6cff)](./bench/owasp/benchmark.json)
-[![GitHub stars](https://img.shields.io/github/stars/Zennoxa/shield?style=flat&color=7c6cff)](https://github.com/Zennoxa/shield/stargazers)
 
 </div>
 
@@ -19,7 +18,7 @@
   <img src="docs/priority-demo.gif" alt="Zennoxa Shield's Priority Engine re-sorting findings by real-world exploitability so the reachable, exploitable bug rises to the top" width="820">
 </p>
 
-<p align="center"><em>Shield's <b>Priority Engine</b> re-orders findings by real-world exploitability — the reachable, exploitable bug rises to the top.<br><sub>Hosted dashboard shown; the <code>shield</code> CLI emits the same 0–100 priority scores as text and SARIF.</sub></em></p>
+<p align="center"><em>Shield's <b>Priority Engine</b> re-orders findings by real-world exploitability — the reachable, exploitable bug rises to the top.<br><sub>Hosted dashboard shown. The <code>shield</code> CLI prints an offline priority per finding in text, JSON and SARIF: CVSS and reachability, plus EPSS and CISA KEV for dependency CVEs when you pass <code>--deps</code>.</sub></em></p>
 
 <p align="center">
   <img src="docs/scan-demo.svg" alt="Example: shield scan finds a shell injection, hardcoded secrets and a weak hash" width="720">
@@ -30,9 +29,9 @@
 
 **Zennoxa Shield is a security scanner for the whole software delivery lifecycle.** In a single pass it runs static analysis (SAST), secret scanning, dependency / software-composition analysis (SCA), container and infrastructure-as-code (IaC) checks over your codebase — then ranks every finding by real-world exploitability, so you fix what actually matters instead of a wall of "critical" alerts.
 
-The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top.
+The `shield` CLI in this repository is free and MIT-licensed, runs offline from the command line, and outputs **SARIF** for GitHub code scanning and CI security gates across **24 programming languages**. What sets Shield apart from most scanners is its **Priority Engine**: instead of sorting by raw severity, it blends CVSS, EPSS, CISA KEV and code reachability into one **0–100 score**, so the genuinely exploitable findings rise to the top. Offline, the CLI scores with CVSS and reachability only (so at most 45 of 100) and adds EPSS and KEV for dependency CVEs when you pass `--deps`; the hosted dashboard computes the full ranking for every finding.
 
-> **This repository** hosts the **Shield CLI releases, documentation, and community issue tracker.** The scanning engine and dashboard are a hosted product at **[zennoxa.com](https://zennoxa.com)** — free during beta.
+> **This repository** hosts the Shield CLI releases, documentation and the community issue tracker. The CLI binary is MIT-licensed and contains the scanning engine, so scans run on your machine. The engine source code is not public. The dashboard at **[zennoxa.com](https://zennoxa.com)** is a separate, optional hosted product — free during beta.
 
 ## Latest research
 
@@ -62,7 +61,7 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 | **Secrets** | **26 credential patterns** — cloud keys, tokens, private keys, database URLs, provider API keys |
 | **Dependencies (SCA)** | Known CVEs via **[OSV.dev](https://osv.dev)** + a **CycloneDX 1.4 SBOM** |
 | **Containers** | Dockerfile misconfigurations and image scanning |
-| **Infrastructure-as-Code** | Terraform & Kubernetes misconfigurations *(hosted)* |
+| **Infrastructure-as-Code** | Terraform & Kubernetes misconfigurations |
 | **License compliance** | Dependency license risks *(hosted)* |
 | **Priority Engine** | A **0–100 risk score** per finding — CVSS + EPSS + CISA KEV + code reachability — so the noise sinks and the exploitable issues rise |
 
@@ -95,7 +94,7 @@ Ground truth is **9 known-vulnerable advisories** for this project (undici, domp
 - **OWASP Benchmark:** the suite is public — install the Shield CLI (above) and run it against [OWASP-Benchmark/BenchmarkJava](https://github.com/OWASP-Benchmark/BenchmarkJava), then score with OWASP's own scoring tool. The competitor rows can be checked directly against OWASP's [published Benchmark scorecards](https://owasp.org/www-project-benchmark/).
 - **Dependency example:** the 9 advisories are public GitHub Advisory / OSV entries — verify each in those databases and re-run any listed tool at its default configuration on the same project and commit.
 
-Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single offline scan, with findings ranked 0-100 using severity, exploitability signals (EPSS/KEV where a CVE is known), and reachability.
+Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single local scan (dependency lookups with `--deps` need the network), with findings ranked by severity, reachability and, for dependency CVEs, EPSS/KEV.
 
 ### A note on precision
 
@@ -155,7 +154,7 @@ Browse and triage findings at **[zennoxa.com](https://zennoxa.com)**.
 
 ## Use Shield from your AI coding agent (MCP)
 
-The same binary runs as a [Model Context Protocol](https://modelcontextprotocol.io) server, so Claude Code, Cursor, Windsurf or any MCP client can scan a repository, page through findings by priority, read the flagged code with fix guidance, look up a rule, apply a gate and generate an SBOM — all on your machine.
+Since v0.7.0 the same binary runs as a [Model Context Protocol](https://modelcontextprotocol.io) server over stdio, so an MCP client such as Claude Code or Cursor can scan a repository, page through findings by priority, read the flagged line with fix guidance, look up a rule, apply a gate and list SBOM components.
 
 ```bash
 # Claude Code
@@ -163,11 +162,28 @@ claude mcp add shield -- shield mcp
 ```
 
 ```json
-// Cursor, Windsurf and other MCP clients (mcp.json)
+// Other MCP clients (mcp.json)
 { "mcpServers": { "shield": { "command": "shield", "args": ["mcp"] } } }
 ```
 
-Tools: `shield_scan`, `shield_findings`, `shield_finding`, `shield_rule`, `shield_gate`, `shield_sbom`. Only a scan with `deps=true` uses the network (OSV.dev, FIRST EPSS, CISA KEV), exactly like `shield scan --deps`.
+| Tool | What it does |
+| --- | --- |
+| `shield_scan` | Scan a directory; returns a scan id, severity counts and the top 25 findings by priority |
+| `shield_findings` | Page and filter a scan's findings (severity, rule, file, minimum priority, reachable only) |
+| `shield_finding` | One finding: file and line, flagged snippet, recommendation, rule guidance for catalogued SAST rules |
+| `shield_rule` | Look up a catalogued SAST rule by id |
+| `shield_gate` | Pass/fail on a severity, grade or score threshold |
+| `shield_sbom` | CycloneDX or SPDX components, paged |
+
+What touches the network:
+
+| Mode | Leaves the machine |
+| --- | --- |
+| `shield_scan` (default) and every other tool | Nothing |
+| `shield_scan` with `deps=true` | Package names and versions to OSV.dev, CVE ids to FIRST EPSS, CISA KEV feed download. No source code |
+| Tool results | Returned to your agent (finding metadata and the flagged line), which forwards them to its model provider like any tool output |
+
+Things to know: secret values in secret findings are masked before they are returned (pattern-based, best effort). Shield does not edit code; the agent does, and findings carry a `fingerprint` that stays stable across scans so a rescan shows what was fixed. One scan runs at a time, with `--scan-timeout` (default 10m); `shield mcp --root DIR` confines scans to one directory tree. We have run it end to end with Claude Code and the MCP Go SDK client; other stdio clients should work but are not tested by us yet. More detail: [zennoxa.com/mcp](https://zennoxa.com/mcp).
 
 ## Pre-commit hook
 
@@ -176,7 +192,7 @@ Run Shield before every commit with [pre-commit](https://pre-commit.com). Instal
 ```yaml
 repos:
   - repo: https://github.com/Zennoxa/shield
-    rev: v0.3.0
+    rev: v0.7.0
     hooks:
       - id: shield
 ```
@@ -201,7 +217,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Zennoxa/shield@v0.3.0     # pin to a tag or commit SHA
+      - uses: Zennoxa/shield@v0.7.0     # pin to a tag or commit SHA
         with:
           args: --deps                 # also scan dependencies (SCA)
           fail-on-findings: false      # set true to block PRs on findings
@@ -224,6 +240,8 @@ Priority = CVSS·0.30 + EPSS·0.30 + KEV·0.25 + reachability·0.15
 
 So the list sorts by what's genuinely exploitable — not just what's noisy. You fix the top and move on.
 
+**What the CLI computes offline.** A signal that is not available contributes zero. A plain `shield scan .` has CVSS and reachability, so its scores top out at 45. With `--deps`, dependency CVEs also get EPSS and CISA KEV. The hosted dashboard has all four signals for every finding. The CLI prints which basis it used (`PriorityBasis` in JSON and SARIF).
+
 ## FAQ
 
 **What is Zennoxa Shield?** Zennoxa Shield is a security scanner that finds vulnerabilities across your code (SAST), dependencies (SCA), secrets, containers and infrastructure-as-code in a single scan, then ranks every finding **0–100** by real-world exploitability. The `shield` CLI in this repo is free and MIT-licensed; a hosted dashboard at [zennoxa.com](https://zennoxa.com) adds team and organization features.
@@ -232,7 +250,7 @@ So the list sorts by what's genuinely exploitable — not just what's noisy. You
 
 **Is it free?** Yes — free during beta, no credit card required. The CLI and documentation in this repo are MIT-licensed.
 
-**Does my code leave my machine?** `shield scan .` runs locally. Results are only uploaded when you pass `--submit` to send them to your dashboard.
+**Does my code leave my machine?** `shield scan .` runs locally and makes no network requests. With `--deps`, package names and versions are sent to OSV.dev, CVE ids to FIRST EPSS, and the CISA KEV feed is downloaded; source code is not sent. Findings, each with the one flagged source line, are uploaded only when you pass `--submit` to send them to your dashboard.
 
 **Which languages are supported?** 24 for SAST — 14 with comprehensive coverage plus lighter coverage for 10+ more (see the list above). Secrets, dependency, and container scanning are language-agnostic.
 
