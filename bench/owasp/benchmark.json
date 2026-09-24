@@ -1,21 +1,32 @@
 {
   "schema": "zennoxa-shield-benchmark/v1",
-  "note": "First-party OWASP Benchmark v1.2 result for Zennoxa Shield. Shield-only — contains no competitor data.",
+  "note": "First-party OWASP Benchmark v1.2 result for Zennoxa Shield. Shield-only: contains no competitor data.",
   "tool": {
     "name": "Zennoxa Shield",
-    "engine": "SAST — regex + intra-file taint + dataflow (constant-fold / key-sensitive maps)",
+    "engine": "SAST: regex + intra-file taint + dataflow (constant-fold / key-sensitive maps)",
     "commit": "515fff7",
     "rules_loaded": 341,
-    "release_note": "Measured with the public CLI release v0.5.0 and re-scored with identical results on v0.7.0 (2026-09-21): +0.582, precision 92.5%, recall 63.7%, FPR 5.5% over 2,740 cases. The scan is one public command; the script that maps findings to the suite's categories is not published in this repository yet."
+    "release": "v0.7.0",
+    "release_note": "Measured on engine commit 515fff7 (2026-08-04) with the public CLI release v0.5.0, re-scored unchanged on v0.7.0 and reproduced on 2026-09-24 from the v0.7.0 release binary via bench/owasp/reproduce.sh: +0.582, precision 92.5%, recall 63.7%, FPR 5.5% over 2,740 cases. The scorer (bench/owasp/score.py) and the dataset pin are in this repository."
+  },
+  "dataset": {
+    "name": "OWASP Benchmark",
+    "version": "1.2",
+    "source": "https://github.com/OWASP-Benchmark/BenchmarkJava",
+    "commit": "695a293db67d508d7584b0a5297d160ad13f8d59",
+    "cases": 2740,
+    "ground_truth": "expectedresults-1.2.csv",
+    "ground_truth_sha256": "1809f6a690c6cf7dd6685df6ebe2eef8fe3ca93d19a7ca0ce45987ca4f5d78e1"
   },
   "benchmark": {
     "suite": "OWASP Benchmark",
     "version": "1.2",
     "source": "https://github.com/OWASP-Benchmark/BenchmarkJava",
     "cases": 2740,
-    "score_metric": "Benchmark Score = True Positive Rate − False Positive Rate (Youden's J), strict OWASP CWE-per-category match; higher is better",
+    "score_metric": "Benchmark Score = TPR - FPR (Youden's J), strict OWASP CWE-per-category match; scorer: bench/owasp/score.py",
     "measured_at": "2026-08-04",
-    "reverified_at": "2026-08-13",
+    "reverified_at": "2026-09-24",
+    "reverified_with": "v0.7.0 release binary (linux-amd64, SHA256SUMS-verified)",
     "overall": {
       "benchmark_score": 0.582,
       "precision": 0.925,
@@ -37,11 +48,11 @@
     }
   },
   "reproduce": [
-    "git clone --depth 1 https://github.com/OWASP-Benchmark/BenchmarkJava",
-    "Scan the suite with the Shield CLI: shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode --format sarif --output shield.sarif",
-    "Score shield.sarif against BenchmarkJava/expectedresults-1.2.csv using OWASP's own published scoring tooling (strict CWE-per-category match).",
-    "The score depends on the Shield engine version; this result is from engine commit 515fff7 (measured 2026-08-04, re-verified 2026-08-13)."
+    "git clone https://github.com/Zennoxa/shield && cd shield",
+    "bench/owasp/reproduce.sh v0.7.0",
+    "The script downloads the tagged binary for your OS, verifies it against the release SHA256SUMS, fetches BenchmarkJava at the pinned commit, checks the ground-truth CSV checksum, runs `shield scan` over the test cases, scores with bench/owasp/score.py and compares the result with this file (tolerance 0.005).",
+    "SHIELD_BIN=/path/to/shield bench/owasp/reproduce.sh scores a binary you built yourself; OWASP_BENCH=/path/to/BenchmarkJava reuses an existing checkout."
   ],
-  "reproducibility_note": "Every figure here is produced on the public OWASP Benchmark v1.2 suite (2,740 labelled Java cases). To compare other tools, use OWASP's own published scorecards; run every tool at its default configuration.",
+  "reproducibility_note": "Every figure here is produced on the public OWASP Benchmark v1.2 suite (2,740 labelled Java cases) with the released binary. To compare other tools, use OWASP's own published scorecards and run every tool at its default configuration; we do not measure other tools here.",
   "trademark": "\"OWASP\" and \"OWASP Benchmark\" are trademarks of the OWASP Foundation, used for identification only; this project is not affiliated with or endorsed by the OWASP Foundation."
 }

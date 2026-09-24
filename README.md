@@ -83,7 +83,7 @@ _Measured by us with the released CLI at its default configuration. Results vary
 
 The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.582 at 92.5% precision** (recall 63.7%, false-positive rate 5.5%) — see [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json) for the per-category breakdown. The benchmark is Java only; it says nothing about the other languages or the secret, dependency, container and IaC layers.
 
-What you can and cannot check today: the suite and its expected-results file are public, and the scan is one command (`shield scan <BenchmarkJava>/src/main/java/org/owasp/benchmark/testcode --format json --output findings.json`). The script that maps Shield's findings to the suite's categories and computes the score is not in this repository yet, so until it is, treat the number as our measurement rather than something you can reproduce end to end.
+What you can and cannot check today: the suite and its expected-results file are public, and the scan is one command (`shield scan <BenchmarkJava>/src/main/java/org/owasp/benchmark/testcode --format json --output findings.json`). The scorer that maps Shield's findings to the suite's categories is [`bench/owasp/score.py`](bench/owasp/score.py), and [`bench/owasp/reproduce.sh`](bench/owasp/reproduce.sh) runs the whole thing end to end (verified release download, pinned dataset, scan, score, compare) and ends with `REPRODUCED` or `NOT REPRODUCED`.
 
 ### Dependency (SCA) scanning — a run you can repeat
 
