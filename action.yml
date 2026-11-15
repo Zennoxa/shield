@@ -31,7 +31,7 @@ inputs:
     required: false
     default: ''
   fail-on-findings:
-    description: 'Fail the workflow if Shield reports any findings (true/false). For severity-based gating prefer passing --fail-on-severity via args.'
+    description: 'Fail the workflow if Shield reports any findings at all (true/false). Independent of the security gate: a --fail-on-severity / --fail-on-grade / --min-score flag passed via args always fails the workflow when it trips (exit 2), whatever this input says.'
     required: false
     default: 'false'
 
@@ -40,7 +40,7 @@ outputs:
     description: 'Path of the report file that was written.'
     value: ${{ steps.scan.outputs.report }}
   exit-code:
-    description: 'Exit code of `shield scan` (0 = clean/pass; 2 = gate flags tripped).'
+    description: 'Exit code of `shield scan` (0 = clean or gate passed; 2 = a --fail-on-* / --min-score gate tripped, which also fails this step).'
     value: ${{ steps.scan.outputs.exit-code }}
 
 runs:
@@ -99,11 +99,22 @@ runs:
 
         found=0
         if [ -f "$INPUT_OUTPUT" ]; then
-          found="$(grep -coE '"(RuleID|ruleId)"' "$INPUT_OUTPUT" 2>/dev/null || echo 0)"
+          # JSON: one "RuleID" per finding. SARIF: "ruleIndex" appears once per
+          # result ("ruleId" would also count the rules table).
+          found="$(grep -coE '"(RuleID|ruleIndex)"' "$INPUT_OUTPUT" 2>/dev/null || echo 0)"
         fi
         echo "Zennoxa Shield reported ${found} finding(s). Report: ${INPUT_OUTPUT}"
 
-        if [ "$INPUT_FAIL" = "true" ] && { [ "$code" -eq 2 ] || [ "${found}" -gt 0 ]; }; then
-          echo "::error::Zennoxa Shield gate failed (${found} finding(s), exit ${code})."
+        # A security gate requested through args (--fail-on-severity, --fail-on-grade,
+        # --min-score) is the caller's policy: exit 2 always fails the step. It used
+        # to be swallowed unless fail-on-findings was true, which then also failed on
+        # any finding at all.
+        if [ "$code" -eq 2 ]; then
+          echo "::error::Zennoxa Shield security gate failed (see the scan log above; ${found} finding(s) in the report)."
+          exit 2
+        fi
+
+        if [ "$INPUT_FAIL" = "true" ] && [ "${found}" -gt 0 ]; then
+          echo "::error::Zennoxa Shield reported ${found} finding(s) and fail-on-findings is true."
           exit 1
         fi
