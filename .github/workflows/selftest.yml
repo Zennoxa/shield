@@ -1,0 +1,240 @@
+# Proves, on GitHub's own runners, that what the README tells people to do works:
+# the Action on every runner type, and each install path.
+name: Self-test
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selftest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  action:
+    name: Action on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest, windows-11-arm]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Fixtures
+        shell: bash
+        run: |
+          mkdir -p fixture/vuln fixture/clean
+          printf '%s\n' 'const express = require("express"); const app = express();' \
+            'app.get("/u", (req, res) => { db.query("SELECT * FROM t WHERE id = " + req.query.id); });' > fixture/vuln/app.js
+          printf '%s\n' 'export function add(a, b) { return a + b }' > fixture/clean/math.js
+
+      - name: Scan the vulnerable fixture (pinned scanner)
+        id: vuln
+        uses: ./
+        with:
+          path: fixture/vuln
+          version: v0.7.0
+          output: vuln.json
+
+      - name: Scan the clean fixture (latest scanner)
+        id: clean
+        uses: ./
+        with:
+          path: fixture/clean
+          output: clean.json
+
+      - name: A tripped gate must fail the step
+        id: gate
+        continue-on-error: true
+        uses: ./
+        with:
+          path: fixture/vuln
+          version: v0.7.0
+          output: gate.json
+          args: --fail-on-severity high
+
+      - name: fail-on-findings must fail the step
+        id: any
+        continue-on-error: true
+        uses: ./
+        with:
+          path: fixture/vuln
+          version: v0.7.0
+          output: any.json
+          fail-on-findings: true
+
+      - name: SARIF output
+        id: sarif
+        uses: ./
+        with:
+          path: fixture/vuln
+          version: v0.7.0
+          format: sarif
+          output: shield.sarif
+
+      - name: Check what the steps reported
+        shell: bash
+        env:
+          VULN_FINDINGS: ${{ steps.vuln.outputs.findings }}
+          VULN_VERSION: ${{ steps.vuln.outputs.version }}
+          CLEAN_FINDINGS: ${{ steps.clean.outputs.findings }}
+          CLEAN_EXIT: ${{ steps.clean.outputs.exit-code }}
+          GATE_OUTCOME: ${{ steps.gate.outcome }}
+          GATE_EXIT: ${{ steps.gate.outputs.exit-code }}
+          ANY_OUTCOME: ${{ steps.any.outcome }}
+          SARIF_FINDINGS: ${{ steps.sarif.outputs.findings }}
+        run: |
+          fail=0
+          check() { if [ "$2" = "$3" ]; then echo "ok    $1 = $2"; else echo "::error::$1 is '$2', expected '$3'"; fail=1; fi; }
+          check "vulnerable fixture: findings"      "$VULN_FINDINGS"  "1"
+          check "vulnerable fixture: scanner"       "$VULN_VERSION"   "v0.7.0"
+          check "clean fixture: findings"           "$CLEAN_FINDINGS" "0"
+          check "clean fixture: exit code"          "$CLEAN_EXIT"     "0"
+          check "gate step outcome"                 "$GATE_OUTCOME"   "failure"
+          check "gate step exit code"               "$GATE_EXIT"      "2"
+          check "fail-on-findings step outcome"     "$ANY_OUTCOME"    "failure"
+          check "SARIF: findings"                   "$SARIF_FINDINGS" "1"
+          grep -q '"version": "2.1.0"' shield.sarif && echo "ok    SARIF 2.1.0 document written" || { echo "::error::shield.sarif is not a SARIF 2.1.0 document"; fail=1; }
+          exit "$fail"
+
+  code-scanning:
+    name: SARIF is accepted by GitHub code scanning
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Fixture
+        run: |
+          mkdir -p selftest-fixture
+          printf '%s\n' 'const express = require("express"); const app = express();' \
+            'app.get("/u", (req, res) => { db.query("SELECT * FROM t WHERE id = " + req.query.id); });' > selftest-fixture/app.js
+      - uses: ./
+        with:
+          path: selftest-fixture
+          version: v0.7.0
+          format: sarif
+          output: shield.sarif
+      - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: shield.sarif
+          category: selftest
+
+  install-sh:
+    name: install.sh on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install as the README says (piped into sh)
+        run: cat install.sh | sh
+      - name: The command works in a new shell
+        run: |
+          shield version
+          mkdir -p fixture && printf '%s\n' 'const k = eval(process.argv[2]);' > fixture/a.js
+          shield scan fixture --format json --output report.json
+          grep -q '"RuleID"' report.json
+      - name: Install a pinned release into a folder of my own
+        run: |
+          SHIELD_VERSION=v0.6.2 SHIELD_INSTALL_DIR="$HOME/shield-pinned" sh install.sh
+          "$HOME/shield-pinned/shield" version | grep -q 'v0.6.2'
+
+  install-sh-containers:
+    name: install.sh in ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['alpine:3.20', 'debian:12-slim', 'fedora:41']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install and run inside the container, as root and as a plain user without sudo
+        run: |
+          docker run --rm -v "$PWD/install.sh:/install.sh:ro" ${{ matrix.image }} sh -c '
+            set -e
+            if command -v apk >/dev/null; then apk add --no-cache curl >/dev/null
+            elif command -v apt-get >/dev/null; then apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null
+            fi
+            sh /install.sh && shield version
+            adduser -D dev 2>/dev/null || useradd -m dev
+            su dev -c "sh /install.sh && \$HOME/.local/bin/shield version"
+          '
+
+  install-ps1:
+    name: install.ps1 on ${{ matrix.os }} (${{ matrix.shell }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-11-arm]
+        shell: [pwsh, powershell]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install as the README says (piped into iex)
+        run: Get-Content -Raw .\install.ps1 | Invoke-Expression
+      - name: The command works in a new shell, from the user PATH
+        run: |
+          $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+          if ($userPath -notlike '*Programs\shield*') { throw "the install folder is not on the user PATH: $userPath" }
+          $env:Path = $env:Path + ';' + $userPath
+          shield version
+          if ($LASTEXITCODE -ne 0) { throw 'shield version failed' }
+          New-Item -ItemType Directory -Force fixture | Out-Null
+          Set-Content -Path fixture\a.js -Value 'const k = eval(process.argv[2]);'
+          shield scan fixture --format json --output report.json
+          if (-not (Select-String -Path report.json -Pattern '"RuleID"' -Quiet)) { throw 'the scan reported nothing' }
+
+  homebrew:
+    name: Homebrew on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - name: Install from the tap and run
+        run: |
+          brew install zennoxa/tap/shield
+          shield version
+          mkdir -p fixture && printf '%s\n' 'const k = eval(process.argv[2]);' > fixture/a.js
+          shield scan fixture --format json --output report.json
+          grep -q '"RuleID"' report.json
+
+  hook:
+    name: pre-commit hook script
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install the CLI
+        run: cat install.sh | sh
+      - name: Clean, vulnerable and fully suppressed repositories
+        run: |
+          hook="$PWD/hooks/shield-scan.sh"
+          mkdir -p t/clean t/vuln t/suppressed
+          printf '%s\n' 'export function add(a, b) { return a + b }' > t/clean/math.js
+          printf '%s\n' 'const k = eval(process.argv[2]);' > t/vuln/a.js
+          cp t/vuln/a.js t/suppressed/a.js && printf '%s\n' '*.js' > t/suppressed/.shieldignore
+          (cd t/clean && bash "$hook") || { echo "::error::the hook blocked a clean repository"; exit 1; }
+          (cd t/suppressed && bash "$hook") || { echo "::error::the hook blocked a repository whose findings are all suppressed"; exit 1; }
+          if (cd t/vuln && bash "$hook" >/dev/null 2>&1); then echo "::error::the hook passed a repository with a finding"; exit 1; fi
+          echo "ok"
