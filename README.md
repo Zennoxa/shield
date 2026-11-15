@@ -106,6 +106,22 @@ _"OWASP" and "OWASP Benchmark" are trademarks of the OWASP Foundation, used here
 
 ## Install the CLI
 
+### macOS and Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Zennoxa/shield/main/install.sh | sh
+```
+
+[`install.sh`](install.sh) downloads the release binary for your machine, checks it against the release's `SHA256SUMS` (it stops if the checksum is missing or wrong), installs it as `shield` and runs `shield version`. It installs to `/usr/local/bin` when that is writable or `sudo` can be used, otherwise to `~/.local/bin`, and tells you if that folder is not on your `PATH`. Pin a release with `SHIELD_VERSION=v0.7.0`, choose the folder with `SHIELD_INSTALL_DIR`.
+
+### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/Zennoxa/shield/main/install.ps1 | iex
+```
+
+[`install.ps1`](install.ps1) does the same on Windows: it installs `shield.exe` under `%LOCALAPPDATA%\Programs\shield` and adds that folder to your user `PATH`. No administrator rights are needed. Open a new terminal afterwards, then run `shield version`.
+
 ### Homebrew (macOS / Linux)
 
 ```bash
@@ -113,29 +129,39 @@ brew install zennoxa/tap/shield
 shield version
 ```
 
-### Direct download
+### Manual download
 
-Grab the latest binary from **[Releases](https://github.com/Zennoxa/shield/releases/latest)** — optionally verifying it against the published `SHA256SUMS`.
+Every release on the **[Releases](https://github.com/Zennoxa/shield/releases/latest)** page carries one file per platform and a `SHA256SUMS` file.
+
+| Platform | File |
+|---|---|
+| Linux x86-64 | `shield-linux-amd64` |
+| Linux ARM64 | `shield-linux-arm64` |
+| macOS Apple silicon | `shield-darwin-arm64` |
+| macOS Intel | `shield-darwin-amd64` |
+| Windows x86-64 | `shield-windows-amd64.exe` |
 
 ```bash
-# pick your platform: shield-linux-amd64 · shield-linux-arm64 · shield-darwin-amd64 · shield-darwin-arm64
-curl -LO https://github.com/Zennoxa/shield/releases/latest/download/shield-darwin-arm64
-curl -LO https://github.com/Zennoxa/shield/releases/latest/download/SHA256SUMS
+# Linux and macOS: replace the file name with the one for your platform
+curl -fsSLO https://github.com/Zennoxa/shield/releases/latest/download/shield-linux-amd64
+curl -fsSLO https://github.com/Zennoxa/shield/releases/latest/download/SHA256SUMS
 
-# verify the download (prints "shield-darwin-arm64: OK")
-# macOS: shasum -a 256 -c SHA256SUMS --ignore-missing
-sha256sum --ignore-missing --check SHA256SUMS
+# verify (prints "shield-linux-amd64: OK"); on macOS use: shasum -a 256 -c -
+grep ' shield-linux-amd64$' SHA256SUMS | sha256sum -c -
 
-# install onto your PATH
-chmod +x shield-darwin-arm64 && sudo mv shield-darwin-arm64 /usr/local/bin/shield
+chmod +x shield-linux-amd64 && sudo mv shield-linux-amd64 /usr/local/bin/shield
 shield version
 ```
 
-**Windows** — download `shield-windows-amd64.exe` from Releases and add it to your `PATH`.
+Three things that stop people after a manual download:
 
-### What the install script does
+- **The file is not called `shield`.** Rename it (`shield`, or `shield.exe` on Windows) and put its folder on your `PATH`; otherwise the command in every example is not found. On Windows, double-clicking the file only flashes a console window: Shield is a command-line program, run it from PowerShell or Command Prompt.
+- **macOS blocks a file downloaded with a browser** ("cannot be opened because the developer cannot be verified"). The release binaries are not notarized by Apple. A file fetched with `curl`, the install script or Homebrew is not affected. For a browser download, check the checksum, then clear the flag: `xattr -d com.apple.quarantine ./shield-darwin-arm64`.
+- **Windows SmartScreen warns about a file downloaded with a browser** ("Windows protected your PC"). The release binaries are not code-signed. Check the checksum with `Get-FileHash .\shield-windows-amd64.exe -Algorithm SHA256` against `SHA256SUMS`, then choose "More info" and "Run anyway", or use the install script above, which is not affected.
 
-`curl -sSL https://zennoxa.com/install | sh` detects your OS and CPU, downloads the matching binary and `SHA256SUMS` from the latest GitHub release, and aborts if the SHA-256 does not match. It installs to `/usr/local/bin` (using `sudo` only if that directory is not writable) or to `SHIELD_INSTALL_DIR` if you set it. Two things to know: the checksum detects a corrupted download, not a compromised release, and if `SHA256SUMS` cannot be fetched or no SHA-256 tool is present the script warns and installs without verification. If that matters to you, use the direct download above and verify by hand.
+### The script on zennoxa.com
+
+`curl -sSL https://zennoxa.com/install | sh` is the same kind of installer served from the product site. It also downloads from this repository's releases.
 
 ## Quick start
 
@@ -208,29 +234,74 @@ pre-commit install
 pre-commit run shield --all-files
 ```
 
-The hook scans the whole repository and blocks the commit on any finding of any severity, and also if the scan itself fails (bypass with `git commit --no-verify`).
+The hook scans the whole repository and blocks the commit on any finding of any severity. If the scan itself cannot finish it also blocks, and says so instead of reporting findings. Findings you have suppressed (`.shieldignore`, inline `shield:ignore`) do not block. Bypass with `git commit --no-verify`.
 
 ## Use it in CI
 
-Add the **Zennoxa Shield GitHub Action** — one step, no manual install:
+Add the **Zennoxa Shield GitHub Action**: one step, nothing to install. It runs on Linux, macOS and Windows runners, x86-64 and ARM64.
 
 ```yaml
 # .github/workflows/security.yml
 name: Security
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   shield:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: Zennoxa/shield@v0.7.0     # pin to a tag or commit SHA
         with:
-          version: v0.7.0              # pins the scanner binary too (default: latest)
+          version: v0.7.0              # the scanner release to run (default: latest)
           args: --deps                 # also scan dependencies (SCA)
-          fail-on-findings: false      # set true to block PRs on findings
 ```
 
-Inputs: `path` (default `.`), `args`, `version` (default `latest`), `fail-on-findings`. More in [`examples/`](examples/).
+By default the step reports and passes. To block a pull request, choose one:
+
+```yaml
+        with:
+          args: --deps --fail-on-severity high   # fail when a finding is high or critical
+```
+
+```yaml
+        with:
+          fail-on-findings: true                 # fail on any finding at all
+```
+
+To see the findings in the repository's **Security** tab, write SARIF and upload it (free for public repositories; private repositories need GitHub code scanning):
+
+```yaml
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  shield:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: Zennoxa/shield@v0.7.0
+        with:
+          version: v0.7.0
+          format: sarif
+          output: shield.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: shield.sarif
+```
+
+| Input | Default | Meaning |
+|---|---|---|
+| `path` | `.` | Folder to scan |
+| `args` | | Extra flags for `shield scan`, for example `--deps --fail-on-severity high` |
+| `format` | `json` | `json` or `sarif` |
+| `output` | `shield-report.json` | Report file |
+| `version` | `latest` | Scanner release, for example `v0.7.0` |
+| `token` | | CLI token or API key for `--submit`; a `SHIELD_CLI_TOKEN` in the job environment also works |
+| `fail-on-findings` | `false` | Fail the step on any finding |
+
+Outputs: `report` (the report file), `findings` (how many), `exit-code` (of `shield scan`), `version` (the scanner release that ran). Ready-made workflows are in [`examples/`](examples/).
 
 ## How prioritization works — the Priority Engine
 

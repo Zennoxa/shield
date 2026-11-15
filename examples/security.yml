@@ -1,13 +1,17 @@
-# .github/workflows/security.yml — scan every push & PR with Zennoxa Shield
+# .github/workflows/security.yml — scan every push and pull request with Zennoxa Shield
 name: Security
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   shield:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: Zennoxa/shield@v0.7.0        # pin to a tag (or a commit SHA)
         with:
-          path: .
+          version: v0.7.0                  # the scanner release to run
           args: --deps                     # also scan dependencies (SCA)
-          fail-on-findings: false          # set true to block the PR on findings
+          # Reports and passes by default. To block the pull request instead:
+          #   args: --deps --fail-on-severity high     (high or critical findings)
+          #   fail-on-findings: true                   (any finding at all)
