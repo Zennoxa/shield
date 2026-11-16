@@ -23,7 +23,7 @@ inputs:
     required: false
     default: 'shield-report.json'
   version:
-    description: 'Shield CLI release to use: a tag like v0.7.0, or "latest". Pin a tag in CI: a scanner that changes version between runs makes results incomparable.'
+    description: 'Shield CLI release to use: a tag like v0.8.0, or "latest". Pin a tag in CI: a scanner that changes version between runs makes results incomparable.'
     required: false
     default: 'latest'
   token:
@@ -93,14 +93,14 @@ runs:
         ver="$INPUT_VERSION"
         if [ -z "$ver" ] || [ "$ver" = "latest" ]; then
           ver="$(curl -fsSLI --retry 3 -o /dev/null -w '%{url_effective}' https://github.com/Zennoxa/shield/releases/latest | sed -n 's#^.*/releases/tag/##p')"
-          [ -n "$ver" ] || fail "Could not resolve the latest Zennoxa Shield release. Set the version input to a tag such as v0.7.0."
+          [ -n "$ver" ] || fail "Could not resolve the latest Zennoxa Shield release. Set the version input to a tag such as v0.8.0."
         fi
         case "$ver" in
           v[0-9]*) ;;
-          *) fail "The version input must be a release tag such as v0.7.0, or latest (got: ${ver})." ;;
+          *) fail "The version input must be a release tag such as v0.8.0, or latest (got: ${ver})." ;;
         esac
         if printf '%s' "$ver" | grep -q '[^0-9A-Za-z.+-]'; then
-          fail "The version input must be a release tag such as v0.7.0, or latest."
+          fail "The version input must be a release tag such as v0.8.0, or latest."
         fi
 
         echo "::group::Install Zennoxa Shield ${ver} (${os}/${arch})"

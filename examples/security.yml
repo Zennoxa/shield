@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: Zennoxa/shield@v0.7.0        # pin to a tag (or a commit SHA)
+      - uses: Zennoxa/shield@v0.8.0        # pin to a tag (or a commit SHA)
         with:
-          version: v0.7.0                  # the scanner release to run
+          version: v0.8.0                  # the scanner release to run
           args: --deps                     # also scan dependencies (SCA)
           # Reports and passes by default. To block the pull request instead:
           #   args: --deps --fail-on-severity high     (high or critical findings)

@@ -10,7 +10,7 @@
 [![Binary: MIT, source closed](https://img.shields.io/badge/binary-MIT%20%C2%B7%20source%20closed-blue.svg)](./LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-informational)
 ![Status](https://img.shields.io/badge/beta-free%20to%20use-16a34a)
-[![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B0.582-7c6cff)](./bench/owasp/benchmark.json)
+[![OWASP Benchmark](https://img.shields.io/badge/OWASP%20Benchmark-%2B1.000-7c6cff)](./bench/owasp/benchmark.json)
 
 </div>
 
@@ -57,8 +57,8 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 
 | Layer | What Shield finds |
 | --- | --- |
-| **Code (SAST)** | Insecure patterns across **25 languages** (14 with comprehensive coverage, a small number of rules each for the other 11) — injection, XSS, weak crypto, unsafe deserialization, and more |
-| **Secrets** | **26 credential patterns** — cloud keys, tokens, private keys, database URLs, provider API keys |
+| **Code (SAST)** | Insecure patterns across **25 languages** (14 with comprehensive coverage and data-flow tracking, a small number of rules each for the other 11) — injection, XSS, weak crypto, unsafe deserialization, and more |
+| **Secrets** | **37 credential patterns** — cloud keys, tokens, private keys, database URLs, provider API keys, application secret keys |
 | **Dependencies (SCA)** | Known CVEs via **[OSV.dev](https://osv.dev)** + a **CycloneDX 1.4 SBOM** |
 | **Containers** | Dockerfile and Kubernetes manifest misconfigurations; `shield image-scan` inspects a registry image's config and build history without pulling layers (`--os-cve` adds OS-package CVEs) |
 | **Infrastructure-as-Code** | Terraform & Kubernetes misconfigurations |
@@ -77,13 +77,15 @@ and reachability into one 0–100 score so the ~10% that actually matter rise fi
 
 > Per-target notes for everything we tested (OWASP Benchmark, Juice Shop, WebGoat, DVNA, Kubernetes Goat, terragoat) are in [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
-_Measured by us with the released CLI at its default configuration. Results vary with version, configuration and codebase. Last re-scored on the v0.7.0 release binary on 2026-09-21._
+_Measured by us with the released CLI at its default configuration. Results vary with version, configuration and codebase. Last re-scored on the v0.8.0 release binary on 2026-11-16._
 
 ### OWASP Benchmark v1.2 (third-party test suite)
 
-The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). Shield scores a **Benchmark Score of +0.582 at 92.5% precision** (recall 63.7%, false-positive rate 5.5%) — see [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json) for the per-category breakdown. The benchmark is Java only; it says nothing about the other languages or the secret, dependency, container and IaC layers.
+The [OWASP Benchmark](https://owasp.org/www-project-benchmark/) is a public suite of **2,740 labelled Java test cases** (score = True Positive Rate − False Positive Rate, higher is better). With v0.8.0 Shield reports **all 1,415 vulnerable cases and none of the 1,325 safe ones: a Benchmark Score of +1.000** when the whole benchmark project is scanned. Scanning only its `testcode` folder gives +0.912 (recall 91.2%, no false positive), because 124 cases depend on helper classes and a properties file that live outside that folder. v0.7.0 scored +0.582 either way. See [`bench/owasp/benchmark.json`](bench/owasp/benchmark.json) for the per-category breakdown. The benchmark is Java only; it says nothing about the other languages or the secret, dependency, container and IaC layers.
 
-What you can and cannot check today: the suite and its expected-results file are public, and the scan is one command (`shield scan <BenchmarkJava>/src/main/java/org/owasp/benchmark/testcode --format json --output findings.json`). The script that maps Shield's findings to the suite's categories and computes the score is not in this repository yet, so until it is, treat the number as our measurement rather than something you can reproduce end to end.
+What you can and cannot check today: the suite and its expected-results file are public, and the scan is one command (`shield scan <BenchmarkJava> --format json --output findings.json`; give it `<BenchmarkJava>/src/main/java/org/owasp/benchmark/testcode` instead for the second figure). A finding counts for a test case when it is reported in that case's file with the weakness the suite expects. The script that does this mapping and computes the score is not in this repository yet, so until it is, treat the number as our measurement rather than something you can reproduce end to end.
+
+**Read a perfect score with care.** The suite is built from a fixed set of code shapes, and v0.8.0 models them: values passed through collections and helper classes, branches that a constant decides, encoders that protect one kind of output only. That is real analysis, and it is also exactly what this suite rewards. On [NIST Juliet for Java](https://samate.nist.gov/SARD/test-suites) (nine injection weaknesses, 5,772 cases), which we did not develop against, v0.8.0's data-flow findings catch 51.9% of the vulnerable cases and flag none of the fixed variants (v0.7.0: 5.7% and 1.3%). Expect your own code to sit closer to that figure than to the benchmark's.
 
 ### Dependency (SCA) scanning — a run you can repeat
 
@@ -92,13 +94,13 @@ git clone https://github.com/appsecco/dvna && cd dvna && git checkout 9ba473a
 shield scan . --deps
 ```
 
-With v0.7.0 on 2026-09-21 this reports 35 dependency findings for DVNA's 19 declared packages, for example CVE-2017-5941 (node-serialize 0.0.4) and CVE-2022-29078 (ejs 2.5.7), next to 10 code findings and 2 container findings. Advisory data comes from [OSV.dev](https://osv.dev), so the count grows as new advisories are published, and the priority of dependency findings moves with EPSS.
+With v0.8.0 on 2026-11-16 this reports 36 dependency findings for DVNA's 19 declared packages, for example CVE-2017-5941 (node-serialize 0.0.4) and CVE-2022-29078 (ejs 2.5.7), next to 10 code findings, 2 container findings and 1 web-configuration finding. Advisory data comes from [OSV.dev](https://osv.dev), so the count grows as new advisories are published, and the priority of dependency findings moves with EPSS.
 
 Shield runs SAST, Secrets, SCA, Container, and CI/CD checks in a single local scan (dependency lookups with `--deps` need the network), with findings ranked by severity, reachability and, for dependency CVEs, EPSS/KEV.
 
 ### A note on precision
 
-Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. As a trade-off, on some datasets its recall is not the highest — on OWASP v1.2, for example, Shield reaches 92.5% precision at roughly 64% recall. We think fewer, higher-confidence findings are the right default, and the CLI is free to run on your own code so you can judge the trade-off there.
+Shield is **precision-first**: it is tuned to keep false positives low so that the findings you see are the ones worth acting on. On the two public suites above that shows as no safe case reported by data flow. The trade-off is recall on code the engine has not been taught: on Juliet, data flow misses about half of the vulnerable cases, and the simpler single-line rules still flag a fixed variant in 15.8% of them. We think fewer, higher-confidence findings are the right default, and the CLI is free to run on your own code so you can judge the trade-off there.
 
 ---
 
@@ -224,7 +226,7 @@ Run Shield before every commit with [pre-commit](https://pre-commit.com). Instal
 ```yaml
 repos:
   - repo: https://github.com/Zennoxa/shield
-    rev: v0.7.0
+    rev: v0.8.0
     hooks:
       - id: shield
 ```
@@ -251,9 +253,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: Zennoxa/shield@v0.7.0     # pin to a tag or commit SHA
+      - uses: Zennoxa/shield@v0.8.0     # pin to a tag or commit SHA
         with:
-          version: v0.7.0              # the scanner release to run (default: latest)
+          version: v0.8.0              # the scanner release to run (default: latest)
           args: --deps                 # also scan dependencies (SCA)
 ```
 
@@ -280,9 +282,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: Zennoxa/shield@v0.7.0
+      - uses: Zennoxa/shield@v0.8.0
         with:
-          version: v0.7.0
+          version: v0.8.0
           format: sarif
           output: shield.sarif
       - uses: github/codeql-action/upload-sarif@v4
@@ -297,7 +299,7 @@ jobs:
 | `args` | | Extra flags for `shield scan`, for example `--deps --fail-on-severity high` |
 | `format` | `json` | `json` or `sarif` |
 | `output` | `shield-report.json` | Report file |
-| `version` | `latest` | Scanner release, for example `v0.7.0` |
+| `version` | `latest` | Scanner release, for example `v0.8.0` |
 | `token` | | CLI token or API key for `--submit`; a `SHIELD_CLI_TOKEN` in the job environment also works |
 | `fail-on-findings` | `false` | Fail the step on any finding |
 
