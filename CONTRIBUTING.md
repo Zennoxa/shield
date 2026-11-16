@@ -2,7 +2,7 @@
 
 Thanks for helping make Shield better!
 
-This repository hosts the **Shield CLI releases, documentation, and community issue tracker**. The scanning engine and dashboard are a hosted product at [zennoxa.com](https://zennoxa.com), so contributions here focus on the CLI experience, docs, and reporting issues.
+This repository hosts the **Shield CLI releases, documentation, and community issue tracker**. The scanning engine is compiled into the CLI binary and its source is not public; the dashboard at [zennoxa.com](https://zennoxa.com) is a separate hosted service. Contributions here therefore focus on docs, CI examples, and bug or false-positive reports.
 
 ## Ways to contribute
 

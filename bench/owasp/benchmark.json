@@ -3,10 +3,10 @@
   "note": "First-party OWASP Benchmark v1.2 result for Zennoxa Shield. Shield-only — contains no competitor data.",
   "tool": {
     "name": "Zennoxa Shield",
-    "engine": "SAST — regex + intra-file taint + dataflow (constant-fold / key-sensitive maps)",
-    "commit": "515fff7",
-    "rules_loaded": 341,
-    "release_note": "This figure is measured on the current Shield engine and is reproducible from the public OWASP dataset with the scoring method below. A version-matched public CLI release is in preparation; the latest published CLI release may score differently."
+    "engine": "SAST: single-line rules plus data-flow tracking (collections, constant branches, helper functions, calls into other classes of the project, encoders per output context, algorithm names read from .properties files)",
+    "release": "v0.8.0",
+    "rules_loaded": 411,
+    "release_note": "Measured with the public CLI release v0.8.0 (shield-linux-amd64) on 2026-11-16. v0.7.0 scored +0.582 (precision 92.5%, recall 63.7%, FPR 5.5%) on both scan targets."
   },
   "benchmark": {
     "suite": "OWASP Benchmark",
@@ -14,33 +14,66 @@
     "source": "https://github.com/OWASP-Benchmark/BenchmarkJava",
     "cases": 2740,
     "score_metric": "Benchmark Score = True Positive Rate − False Positive Rate (Youden's J), strict OWASP CWE-per-category match; higher is better",
-    "measured_at": "2026-08-04",
-    "reverified_at": "2026-08-13",
+    "measured_at": "2026-11-16",
+    "scan_target": "the whole BenchmarkJava checkout",
     "overall": {
-      "benchmark_score": 0.582,
-      "precision": 0.925,
-      "recall": 0.637,
-      "false_positive_rate": 0.055
+      "benchmark_score": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0,
+      "true_positives": 1415,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "true_negatives": 1325
     },
     "per_category_benchmark_score": {
+      "cmdi": 1.0,
+      "crypto": 1.0,
+      "hash": 1.0,
+      "ldapi": 1.0,
+      "pathtraver": 1.0,
       "securecookie": 1.0,
+      "sqli": 1.0,
+      "trustbound": 1.0,
       "weakrand": 1.0,
-      "crypto": 0.808,
-      "hash": 0.69,
-      "xss": 0.516,
-      "ldapi": 0.499,
-      "xpathi": 0.467,
-      "cmdi": 0.451,
-      "pathtraver": 0.445,
-      "sqli": 0.303,
-      "trustbound": 0.237
+      "xpathi": 1.0,
+      "xss": 1.0
+    },
+    "testcode_folder_only": {
+      "scan_target": "BenchmarkJava/src/main/java/org/owasp/benchmark/testcode",
+      "why_it_differs": "124 vulnerable cases depend on helper classes and on benchmark.properties, which live outside that folder",
+      "overall": {
+        "benchmark_score": 0.912,
+        "precision": 1.0,
+        "recall": 0.912,
+        "false_positive_rate": 0.0,
+        "true_positives": 1291,
+        "false_negatives": 124,
+        "false_positives": 0,
+        "true_negatives": 1325
+      },
+      "per_category_benchmark_score": {
+        "cmdi": 0.913,
+        "crypto": 1.0,
+        "hash": 0.69,
+        "ldapi": 0.889,
+        "pathtraver": 0.887,
+        "securecookie": 1.0,
+        "sqli": 0.938,
+        "trustbound": 0.867,
+        "weakrand": 1.0,
+        "xpathi": 0.933,
+        "xss": 0.894
+      }
     }
   },
+  "caveat": "A perfect score on a public suite means the engine models the code shapes that suite is built from. It is not a claim about other code: on NIST Juliet for Java (nine injection weaknesses, 5,772 cases), which was not used during development, the data-flow findings of v0.8.0 catch 51.9% of the vulnerable cases and flag none of the fixed variants.",
   "reproduce": [
+    "Install the Shield CLI v0.8.0 and verify the download against SHA256SUMS on the release.",
     "git clone --depth 1 https://github.com/OWASP-Benchmark/BenchmarkJava",
-    "Scan the suite with the Shield CLI: shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode --format sarif --output shield.sarif",
-    "Score shield.sarif against BenchmarkJava/expectedresults-1.2.csv using OWASP's own published scoring tooling (strict CWE-per-category match).",
-    "The score depends on the Shield engine version; this result is from engine commit 515fff7 (measured 2026-08-04, re-verified 2026-08-13)."
+    "shield scan BenchmarkJava --format json --output findings.json   (for the second figure: shield scan BenchmarkJava/src/main/java/org/owasp/benchmark/testcode ...)",
+    "Score findings.json against BenchmarkJava/expectedresults-1.2.csv: a finding counts for a test case when it is reported in that case's file with the CWE the suite expects for it.",
+    "The score depends on the Shield release; this result is from v0.8.0, measured 2026-11-16."
   ],
   "reproducibility_note": "Every figure here is produced on the public OWASP Benchmark v1.2 suite (2,740 labelled Java cases). To compare other tools, use OWASP's own published scorecards; run every tool at its default configuration.",
   "trademark": "\"OWASP\" and \"OWASP Benchmark\" are trademarks of the OWASP Foundation, used for identification only; this project is not affiliated with or endorsed by the OWASP Foundation."

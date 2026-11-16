@@ -11,7 +11,7 @@ inputs:
     required: false
     default: '.'
   args:
-    description: 'Extra flags passed to `shield scan` (e.g. "--deps --submit --project my-app"). These come LAST, so they override the defaults below — including --format and --output.'
+    description: 'Extra flags passed to `shield scan`, for example "--deps --fail-on-severity high". They come after the defaults, so a --format given here wins. Split on spaces; quotes and wildcards are passed through as written.'
     required: false
     default: ''
   format:
@@ -23,15 +23,15 @@ inputs:
     required: false
     default: 'shield-report.json'
   version:
-    description: 'Shield CLI release to use — a tag like v0.3.0, or "latest". Pin a tag in CI: an unpinned scanner that changes version between runs makes results incomparable.'
+    description: 'Shield CLI release to use: a tag like v0.8.0, or "latest". Pin a tag in CI: a scanner that changes version between runs makes results incomparable.'
     required: false
     default: 'latest'
   token:
-    description: 'SHIELD_CLI_TOKEN for --submit (pass your repository secret).'
+    description: 'CLI token or API key for --submit (pass your repository secret). When empty, a SHIELD_CLI_TOKEN already set in the job or step environment is used.'
     required: false
     default: ''
   fail-on-findings:
-    description: 'Fail the workflow if Shield reports any findings (true/false). For severity-based gating prefer passing --fail-on-severity via args.'
+    description: 'Fail the workflow if Shield reports any findings at all (true/false). Independent of the security gate: a --fail-on-severity / --fail-on-grade / --min-score flag passed via args always fails the step when it trips.'
     required: false
     default: 'false'
 
@@ -39,9 +39,15 @@ outputs:
   report:
     description: 'Path of the report file that was written.'
     value: ${{ steps.scan.outputs.report }}
+  findings:
+    description: 'Number of findings in the report.'
+    value: ${{ steps.scan.outputs.findings }}
   exit-code:
-    description: 'Exit code of `shield scan` (0 = clean/pass; 2 = gate flags tripped).'
+    description: 'Exit code of `shield scan` (0 = clean or gate passed; 2 = a --fail-on-* / --min-score gate tripped, which also fails this step).'
     value: ${{ steps.scan.outputs.exit-code }}
+  version:
+    description: 'The Shield CLI release that ran.'
+    value: ${{ steps.scan.outputs.version }}
 
 runs:
   using: 'composite'
@@ -58,52 +64,123 @@ runs:
         INPUT_OUTPUT: ${{ inputs.output }}
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_FAIL: ${{ inputs.fail-on-findings }}
-        SHIELD_CLI_TOKEN: ${{ inputs.token }}
+        INPUT_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
 
+        fail() { echo "::error::$*"; exit 1; }
+
+        # Which release binary fits this runner. Windows on ARM runs the x64
+        # binary through the built-in emulation.
+        case "${RUNNER_OS:-$(uname -s)}" in
+          Linux)                        os=linux ;;
+          macOS|Darwin)                 os=darwin ;;
+          Windows|MINGW*|MSYS*|CYGWIN*) os=windows ;;
+          *) fail "Zennoxa Shield publishes no binary for this runner OS (${RUNNER_OS:-$(uname -s)})." ;;
+        esac
+        case "${RUNNER_ARCH:-$(uname -m)}" in
+          X64|x86_64|amd64)    arch=amd64 ;;
+          ARM64|arm64|aarch64) arch=arm64 ;;
+          *) fail "Zennoxa Shield publishes no binary for this runner architecture (${RUNNER_ARCH:-$(uname -m)})." ;;
+        esac
+        exe=""
+        if [ "$os" = windows ]; then arch=amd64; exe=".exe"; fi
+        asset="shield-${os}-${arch}${exe}"
+
+        # Which release. "latest" is resolved through the release page redirect,
+        # not api.github.com: the unauthenticated API is rate-limited per runner
+        # address and fails at random on shared runners.
         ver="$INPUT_VERSION"
-        if [ "$ver" = "latest" ]; then
-          ver="$(curl -fsSL https://api.github.com/repos/Zennoxa/shield/releases/latest \
-                  | grep -oE '"tag_name"[^,]*' | head -1 | cut -d'"' -f4)"
+        if [ -z "$ver" ] || [ "$ver" = "latest" ]; then
+          ver="$(curl -fsSLI --retry 3 -o /dev/null -w '%{url_effective}' https://github.com/Zennoxa/shield/releases/latest | sed -n 's#^.*/releases/tag/##p')"
+          [ -n "$ver" ] || fail "Could not resolve the latest Zennoxa Shield release. Set the version input to a tag such as v0.8.0."
+        fi
+        case "$ver" in
+          v[0-9]*) ;;
+          *) fail "The version input must be a release tag such as v0.8.0, or latest (got: ${ver})." ;;
+        esac
+        if printf '%s' "$ver" | grep -q '[^0-9A-Za-z.+-]'; then
+          fail "The version input must be a release tag such as v0.8.0, or latest."
         fi
 
-        echo "::group::Install Zennoxa Shield ${ver}"
-        dir="${RUNNER_TEMP:-/tmp}"
-        bin="${dir}/shield"
+        echo "::group::Install Zennoxa Shield ${ver} (${os}/${arch})"
+        dir="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
+        if command -v cygpath >/dev/null 2>&1; then dir="$(cygpath -u "$dir")"; fi
+        dir="${dir%/}/zennoxa-shield"
+        mkdir -p "$dir"
+        bin="${dir}/shield${exe}"
         base="https://github.com/Zennoxa/shield/releases/download/${ver}"
-        curl -fsSL --retry 3 -o "$bin" "${base}/shield-linux-amd64"
-        # Verify against the published checksums — an unverified download would
+        curl -fsSL --retry 3 -o "$bin" "${base}/${asset}" \
+          || fail "Could not download ${asset} from release ${ver}."
+        # Verify against the published checksums: an unverified download would
         # be a poor look for the step whose whole job is supply-chain safety.
-        curl -fsSL --retry 3 -o "${dir}/SHA256SUMS" "${base}/SHA256SUMS"
-        ( cd "$dir" && grep ' shield-linux-amd64$' SHA256SUMS | sed 's#shield-linux-amd64#shield#' | sha256sum -c - )
+        curl -fsSL --retry 3 -o "${dir}/SHA256SUMS" "${base}/SHA256SUMS" \
+          || fail "Could not download SHA256SUMS of release ${ver}."
+        want="$(awk -v a="$asset" '$2 == a || $2 == "*" a { print $1; exit }' "${dir}/SHA256SUMS")"
+        [ -n "$want" ] || fail "Release ${ver} lists no checksum for ${asset}."
+        if command -v sha256sum >/dev/null 2>&1; then
+          got="$(sha256sum "$bin" | awk '{ print $1 }')"
+        else
+          got="$(shasum -a 256 "$bin" | awk '{ print $1 }')"
+        fi
+        got="${got#\\}"
+        [ "$want" = "$got" ] || fail "Checksum mismatch for ${asset} (${ver}): expected ${want}, got ${got}."
+        echo "Checksum verified: ${asset}"
         chmod +x "$bin"
         "$bin" version
         echo "::endgroup::"
 
-        # Defaults FIRST, caller args LAST — so anything in `args` (including a
-        # different --format/--output) wins. The old order silently forced
-        # json and made SARIF impossible through this Action.
+        # A token passed as an input wins. Without one, a SHIELD_CLI_TOKEN the
+        # caller put in the job or step environment is left as it is.
+        if [ -n "$INPUT_TOKEN" ]; then export SHIELD_CLI_TOKEN="$INPUT_TOKEN"; fi
+
+        # Defaults FIRST, caller args LAST, so a --format in `args` wins. The
+        # args are split on spaces and never expanded as file patterns.
         set +e
+        set -f
         "$bin" scan "$INPUT_PATH" --format "$INPUT_FORMAT" --output "$INPUT_OUTPUT" $INPUT_ARGS
         code=$?
+        set +f
         set -e
-
-        echo "report=$INPUT_OUTPUT" >> "$GITHUB_OUTPUT"
-        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
-
-        if [ "$code" -ne 0 ] && [ "$code" -ne 2 ]; then
-          echo "::error::shield scan did not complete (exit ${code})"
-          exit "$code"
-        fi
 
         found=0
         if [ -f "$INPUT_OUTPUT" ]; then
-          found="$(grep -coE '"(RuleID|ruleId)"' "$INPUT_OUTPUT" 2>/dev/null || echo 0)"
+          # JSON: one "RuleID" per finding. SARIF: "ruleIndex" appears once per
+          # result ("ruleId" would also count the rules table).
+          found="$(grep -cE '"(RuleID|ruleIndex)"' "$INPUT_OUTPUT" 2>/dev/null || true)"
+          found="${found:-0}"
         fi
-        echo "Zennoxa Shield reported ${found} finding(s). Report: ${INPUT_OUTPUT}"
 
-        if [ "$INPUT_FAIL" = "true" ] && { [ "$code" -eq 2 ] || [ "${found}" -gt 0 ]; }; then
-          echo "::error::Zennoxa Shield gate failed (${found} finding(s), exit ${code})."
+        {
+          echo "report=$INPUT_OUTPUT"
+          echo "findings=$found"
+          echo "exit-code=$code"
+          echo "version=$ver"
+        } >> "$GITHUB_OUTPUT"
+
+        if [ "$code" -ne 0 ] && [ "$code" -ne 2 ]; then
+          fail "shield scan did not complete (exit ${code}). The scan log above has the reason."
+        fi
+
+        echo "Zennoxa Shield ${ver} reported ${found} finding(s). Report: ${INPUT_OUTPUT}"
+        if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+          {
+            echo "### Zennoxa Shield"
+            echo
+            echo "${found} finding(s) reported by Shield ${ver}. Report file: \`${INPUT_OUTPUT}\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+        # A security gate requested through args (--fail-on-severity, --fail-on-grade,
+        # --min-score) is the caller's policy: exit 2 always fails the step. It used
+        # to be swallowed unless fail-on-findings was true, which then also failed on
+        # any finding at all.
+        if [ "$code" -eq 2 ]; then
+          echo "::error::Zennoxa Shield security gate failed (see the scan log above; ${found} finding(s) in the report)."
+          exit 2
+        fi
+
+        if [ "$INPUT_FAIL" = "true" ] && [ "$found" -gt 0 ]; then
+          echo "::error::Zennoxa Shield reported ${found} finding(s) and fail-on-findings is true."
           exit 1
         fi

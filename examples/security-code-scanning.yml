@@ -1,0 +1,22 @@
+# .github/workflows/security.yml — show Zennoxa Shield findings in the repository's Security tab
+# (free for public repositories; private repositories need GitHub code scanning)
+name: Security
+on: [push, pull_request]
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  shield:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: Zennoxa/shield@v0.8.0
+        with:
+          version: v0.8.0
+          format: sarif
+          output: shield.sarif
+          args: --deps
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: shield.sarif

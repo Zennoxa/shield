@@ -3,7 +3,7 @@
 We don't just claim accuracy — here is **exactly what we ran Shield against and what it found.**
 Public datasets, reproducible commands, and the exact targets we ran against. Numbers you can check yourself.
 
-_Last measured 2026-07-18. Every figure is a **measured result** on the named public dataset, reproducible with the stated command — not a claim of general superiority. Competitor figures on the OWASP Benchmark are reproduced from **OWASP's own published scorecards**. Results depend on tool versions, rulesets, configuration, and workload and may differ elsewhere. See the Methodology Notice at the end._
+_The OWASP Benchmark and Juliet figures were measured on the v0.8.0 release binary on 2026-11-16; the application audits in section 3 date from 2026-07-18 and an earlier release. Every figure is a **measured result** on the named public dataset, reproducible with the stated command — not a claim of general superiority. Competitor figures on the OWASP Benchmark are reproduced from **OWASP's own published scorecards**. Results depend on tool versions, rulesets, configuration, and workload and may differ elsewhere. See the Methodology Notice at the end._
 
 ---
 
@@ -11,7 +11,8 @@ _Last measured 2026-07-18. Every figure is a **measured result** on the named pu
 
 | Target (public) | What it is | Layers exercised | Headline result |
 |---|---|---|---|
-| **OWASP Benchmark v1.2** | 2,740 labelled Java test cases | SAST | **Benchmark Score +0.547, 92.4% precision** |
+| **OWASP Benchmark v1.2** | 2,740 labelled Java test cases | SAST | **Benchmark Score +1.000** scanning the whole project (+0.912 scanning only `testcode`), no false positive |
+| **NIST Juliet for Java** | 5,772 cases of nine injection weaknesses, not used in development | SAST | data flow catches **51.9%** of the vulnerable cases, flags none of the fixed variants |
 | **OWASP Juice Shop** | Deliberately-insecure JS/Node app | SAST · Secrets · SCA | issues detected across all three layers; audit precision below |
 | **DVNA** | Damn Vulnerable NodeJS App | SAST · SCA · Secrets | ~88% precision (verified audit) |
 | **WebGoat** | OWASP Java training app | SAST · Secrets | ~86% precision (verified audit) |
@@ -30,9 +31,9 @@ Scans `.py .js .ts .java .go .php .rb .cs .cpp .c .kt .rs .swift .dart` (+ IaC/c
 
 **OWASP Benchmark v1.2** (the industry-standard SAST test suite, 2,740 Java cases; score = TPR − FPR):
 
-Shield scores a **Benchmark Score of +0.547 at 92.4% precision** on the suite, reproducible with the released CLI against the public suite (see [`bench/owasp/benchmark.json`](../bench/owasp/benchmark.json)). To see how other tools score, check OWASP's own [published scorecards](https://owasp.org/www-project-benchmark/).
+With v0.8.0 Shield reports all 1,415 vulnerable cases and none of the 1,325 safe ones, a **Benchmark Score of +1.000**, when the whole benchmark project is scanned, and +0.912 when only its `testcode` folder is scanned (124 cases depend on helper classes and a properties file outside it). v0.7.0 scored +0.582. The scan is reproducible with the released CLI against the public suite (see [`bench/owasp/benchmark.json`](../bench/owasp/benchmark.json)). To see how other tools score, check OWASP's own [published scorecards](https://owasp.org/www-project-benchmark/).
 
-### Secrets — 26 credential patterns
+### Secrets — 37 credential patterns
 Scans **every file** for cloud keys, tokens, private keys, database URLs, provider API keys.
 Verified on Juice Shop / WebGoat / DVNA / Kubernetes Goat — SCA + secret findings verified ~95–100% real in our adversarial audit (see §3).
 
@@ -73,9 +74,10 @@ _Methodology: internal adversarial verification (each finding independently judg
 
 We publish our weak spots too — credibility is the whole point:
 
-- **Precision-first by design.** We optimise for low false positives, so on some datasets recall is not the highest (e.g. OWASP v1.2: 92.4% precision at ~60% recall). Fewer, higher-confidence findings is our default.
+- **A perfect benchmark score is not a claim about your code.** v0.8.0 reports every vulnerable case of OWASP Benchmark v1.2 because it models the code shapes that suite is built from. On NIST Juliet for Java, which we did not develop against, its data-flow findings catch 51.9% of the vulnerable cases, and the simpler single-line rules still flag a fixed variant in 15.8% of cases. Expect real code to sit closer to Juliet than to the benchmark.
+- **Precision-first by design.** We optimise for low false positives. Fewer, higher-confidence findings is our default.
 - **No image-layer OS-CVE scanning yet.** On the vulhub CVE-image corpus Shield is blind to OS-package CVEs baked into images — pair it with a dedicated image-CVE scanner for that layer.
-- **Coverage is uneven across corpora** — strong on OWASP-Java (0.547) and dependency detection; weaker recall on some niche SAST corpora (e.g. Juliet-C). We show the numbers rather than hide them.
+- **Coverage is uneven across corpora and languages** — strong on OWASP-Java and dependency detection; about half of Juliet-Java by data flow; weaker on some niche SAST corpora (e.g. Juliet-C). Data flow covers 14 languages; the other 11 have single-line rules only. We show the numbers rather than hide them.
 
 ---
 
